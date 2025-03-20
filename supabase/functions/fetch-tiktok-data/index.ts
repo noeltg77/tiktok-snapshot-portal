@@ -25,7 +25,12 @@ Deno.serve(async (req) => {
 
     console.log(`Fetching TikTok data for username: ${tiktokUsername}`);
     
-    // Call the Apify API to get TikTok data
+    // Format username to ensure it has @ prefix
+    const formattedUsername = tiktokUsername.startsWith('@') 
+      ? tiktokUsername 
+      : `@${tiktokUsername}`;
+    
+    // Call the Apify API to get TikTok data with the correct URL and JSON structure
     const response = await fetch('https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=apify_api_BSZn12KdnyAsoqgb8y7Cga7epcjZop0KVMOW', {
       method: 'POST',
       headers: {
@@ -33,7 +38,7 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         excludePinnedPosts: false,
-        profiles: [tiktokUsername.startsWith('@') ? tiktokUsername : `@${tiktokUsername}`],
+        profiles: [formattedUsername],
         resultsPerPage: 20,
         scrapeLastNDays: 365,
         shouldDownloadCovers: false,
