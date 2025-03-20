@@ -161,21 +161,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       console.log(`Found ${newVideos.length} new videos to insert`);
       
       // Prepare video data for database insertion
-      const postsToInsert = newVideos.map(video => ({
-        id: video.id,
-        user_id: userId,
-        profile_id: userId,
-        text: video.text,
-        digg_count: video.diggCount,
-        share_count: video.shareCount,
-        play_count: video.playCount,
-        collect_count: video.collectCount || 0,
-        comment_count: video.commentCount,
-        cover_url: video.coverUrl,
-        video_url: video.downloadLink,
-        hashtags: Array.isArray(video.hashtags) ? JSON.stringify(video.hashtags) : '[]',
-        tiktok_created_at: new Date(video.createTime).toISOString()
-      }));
+      const postsToInsert = newVideos.map(video => {
+        // Ensure hashtags is properly serialized
+        let hashtagsJson = '[]';
+        if (Array.isArray(video.hashtags)) {
+          try {
+            hashtagsJson = JSON.stringify(video.hashtags);
+          } catch (e) {
+            console.error('Error stringifying hashtags:', e);
+          }
+        }
+        
+        return {
+          id: video.id,
+          user_id: userId,
+          profile_id: userId,
+          text: video.text,
+          digg_count: video.diggCount,
+          share_count: video.shareCount,
+          play_count: video.playCount,
+          collect_count: video.collectCount || 0,
+          comment_count: video.commentCount,
+          cover_url: video.coverUrl,
+          video_url: video.downloadLink,
+          hashtags: hashtagsJson,
+          tiktok_created_at: new Date(video.createTime).toISOString()
+        };
+      });
       
       // Insert new videos into the database
       const { error } = await supabase

@@ -87,14 +87,18 @@ Deno.serve(async (req) => {
     
     // Extract relevant user data from the response
     if (data && data.length > 0 && data[0].authorMeta) {
-      const userData = {
-        avatar: data[0].authorMeta.avatar,
-        following: data[0].authorMeta.following,
-        fans: data[0].authorMeta.fans,
-        heart: data[0].authorMeta.heart,
-        video: data[0].authorMeta.video,
-        // Include video data to avoid making additional API calls
-        videos: data.map(item => ({
+      // Ensure hashtags are arrays in each video object
+      const processedVideos = data.map(item => {
+        // Ensure hashtags is always an array
+        let hashtags = [];
+        if (item.hashtags && Array.isArray(item.hashtags)) {
+          // Convert each hashtag object to a string if needed
+          hashtags = item.hashtags.map(tag => 
+            typeof tag === 'string' ? tag : (tag.name || '')
+          );
+        }
+
+        return {
           id: item.id,
           text: item.text || '',
           createTime: item.createTime,
@@ -105,8 +109,18 @@ Deno.serve(async (req) => {
           collectCount: item.collectCount || 0,
           coverUrl: item.covers && item.covers.length > 0 ? item.covers[0] : null,
           downloadLink: item.videoUrl || null,
-          hashtags: Array.isArray(item.hashtags) ? item.hashtags : []
-        }))
+          hashtags: hashtags
+        };
+      });
+      
+      const userData = {
+        avatar: data[0].authorMeta.avatar,
+        following: data[0].authorMeta.following,
+        fans: data[0].authorMeta.fans,
+        heart: data[0].authorMeta.heart,
+        video: data[0].authorMeta.video,
+        // Include processed video data
+        videos: processedVideos
       };
       
       console.log('Successfully extracted user data and returning response');

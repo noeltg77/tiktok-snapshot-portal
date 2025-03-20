@@ -119,21 +119,33 @@ const TikTokPosts = () => {
       console.log(`Found ${newVideos.length} new videos to insert`);
       
       // Prepare video data for database insertion
-      const postsToInsert = newVideos.map(video => ({
-        id: video.id,
-        user_id: profile.id,
-        profile_id: profile.id,
-        text: video.text,
-        digg_count: video.diggCount,
-        share_count: video.shareCount,
-        play_count: video.playCount,
-        collect_count: video.collectCount || 0,
-        comment_count: video.commentCount,
-        cover_url: video.coverUrl,
-        video_url: video.downloadLink,
-        hashtags: Array.isArray(video.hashtags) ? JSON.stringify(video.hashtags) : '[]',
-        tiktok_created_at: new Date(video.createTime).toISOString()
-      }));
+      const postsToInsert = newVideos.map(video => {
+        // Ensure hashtags is serialized properly as a JSON string if it's an array
+        let hashtagsJson = '[]';
+        if (Array.isArray(video.hashtags)) {
+          try {
+            hashtagsJson = JSON.stringify(video.hashtags);
+          } catch (e) {
+            console.error('Error stringifying hashtags:', e);
+          }
+        }
+        
+        return {
+          id: video.id,
+          user_id: profile.id,
+          profile_id: profile.id,
+          text: video.text,
+          digg_count: video.diggCount,
+          share_count: video.shareCount,
+          play_count: video.playCount,
+          collect_count: video.collectCount || 0,
+          comment_count: video.commentCount,
+          cover_url: video.coverUrl,
+          video_url: video.downloadLink,
+          hashtags: hashtagsJson,
+          tiktok_created_at: new Date(video.createTime).toISOString()
+        };
+      });
       
       // Insert new videos into the database
       const { error } = await supabase
@@ -205,15 +217,19 @@ const TikTokPosts = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map(post => {
             // Safely parse hashtags from JSON string
-            let hashtags = [];
+            let hashtagsArray = [];
             try {
               if (typeof post.hashtags === 'string') {
-                hashtags = JSON.parse(post.hashtags);
+                hashtagsArray = JSON.parse(post.hashtags);
               } else if (Array.isArray(post.hashtags)) {
-                hashtags = post.hashtags;
+                hashtagsArray = post.hashtags;
               }
+              
+              // Ensure hashtags is always an array of strings
+              hashtagsArray = hashtagsArray.filter(tag => typeof tag === 'string');
             } catch (e) {
               console.error('Error parsing hashtags:', e);
+              hashtagsArray = [];
             }
             
             return (
@@ -228,7 +244,7 @@ const TikTokPosts = () => {
                 content={{
                   text: post.text,
                   image: post.cover_url,
-                  hashtags: hashtags,
+                  hashtags: hashtagsArray,
                 }}
                 engagement={{
                   likes: post.digg_count,
