@@ -45,10 +45,11 @@ Deno.serve(async (req) => {
       ? tiktokUsername 
       : `@${tiktokUsername}`;
     
-    // Generate a unique cache key for this request
-    const cacheKey = `tiktok-data-${formattedUsername}-${new Date().toISOString().slice(0,10)}`;
+    // Create a simple date-based cache key
+    // Format: tiktok-data-@username-YYYY-MM-DD
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    const cacheKey = `tiktok-data-${formattedUsername}-${today}`;
     
-    // Make a single API call with proper caching
     console.log(`Making Apify API request for username: ${formattedUsername} with cache key: ${cacheKey}`);
     const response = await fetch('https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=apify_api_BSZn12KdnyAsoqgb8y7Cga7epcjZop0KVMOW', {
       method: 'POST',

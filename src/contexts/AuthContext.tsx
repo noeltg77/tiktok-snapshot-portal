@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -29,20 +30,39 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Create a key in localStorage to track the last fetch time
+const LAST_FETCH_KEY = 'tiktok_last_fetch_time';
+
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
+  const [initialDataFetchDone, setInitialDataFetchDone] = useState(false);
   const navigate = useNavigate();
+  
+  // Get last fetch time from localStorage instead of state to persist across refreshes
+  const getLastFetchTime = (): number | null => {
+    const stored = localStorage.getItem(LAST_FETCH_KEY);
+    return stored ? parseInt(stored, 10) : null;
+  };
+  
+  // Store last fetch time in localStorage
+  const setLastFetchTime = (time: number) => {
+    localStorage.setItem(LAST_FETCH_KEY, time.toString());
+  };
 
   const fetchTikTokData = async (username: string) => {
     try {
       const now = Date.now();
+      const lastFetchTime = getLastFetchTime();
+      
+      // Check if we're in the cooldown period (1 hour = 3600000 ms)
       if (lastFetchTime && now - lastFetchTime < 3600000) {
         console.log('Skipping API call - cooldown period active');
+        console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
+        console.log(`Next fetch available after: ${new Date(lastFetchTime + 3600000).toLocaleString()}`);
         return null;
       }
       
@@ -52,6 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: { tiktokUsername: username }
       });
       
+      // Set the last fetch time in localStorage
       setLastFetchTime(now);
       
       if (response.error) {
@@ -74,8 +95,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setProfileLoading(true);
       
       const now = Date.now();
+      const lastFetchTime = getLastFetchTime();
+      
+      // Check if we're in the cooldown period (1 hour = 3600000 ms)
       if (lastFetchTime && now - lastFetchTime < 3600000) {
         console.log('Skipping refresh - cooldown period active');
+        console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
+        console.log(`Next fetch available after: ${new Date(lastFetchTime + 3600000).toLocaleString()}`);
         setProfileLoading(false);
         return;
       }
@@ -99,8 +125,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) throw error;
         
         setProfile(prev => prev ? { ...prev, ...updateData } : null);
-        
-        setLastFetchTime(now);
       }
     } catch (error) {
       console.error('Error refreshing TikTok data:', error);
@@ -114,6 +138,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!user) {
         setProfile(null);
         setProfileLoading(false);
+        setInitialDataFetchDone(true);
         return;
       }
 
@@ -132,28 +157,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (data) {
           setProfile(data);
           
-          if (data.tiktok_username && !profile) {
-            console.log('Initial profile load - fetching TikTok data');
-            const tiktokData = await fetchTikTokData(data.tiktok_username);
-            
-            if (tiktokData) {
-              const updateData = {
-                avatar_url: tiktokData.avatar,
-                following: tiktokData.following,
-                fans: tiktokData.fans,
-                heart: tiktokData.heart,
-                video: tiktokData.video
-              };
-              
-              const { error: updateError } = await supabase
-                .from('profiles')
-                .update(updateData)
-                .eq('id', user.id);
-                
-              if (!updateError) {
-                setProfile({ ...data, ...updateData });
-              }
-            }
+          // Only fetch TikTok data if we haven't already done the initial fetch
+          // and the user has a TikTok username
+          if (data.tiktok_username && !initialDataFetchDone) {
+            console.log('Initial profile load - checking if TikTok data refresh is needed');
+            await refreshTikTokData(); // This now respects the cooldown period
+            setInitialDataFetchDone(true);
           }
         } else {
           console.log('Profile not found, creating a new one...');
@@ -178,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setProfile(null);
       } finally {
         setProfileLoading(false);
+        setInitialDataFetchDone(true);
       }
     };
 
@@ -190,6 +200,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Reset initialDataFetchDone when auth state changes
+        if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+          setInitialDataFetchDone(false);
+        }
       }
     );
 
