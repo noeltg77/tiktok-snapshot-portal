@@ -30,6 +30,29 @@ const TikTokUsernameForm = () => {
     }
   }, [user, profileLoading, navigate]);
 
+  const fetchTikTokData = async (username) => {
+    try {
+      const response = await supabase.functions.invoke('fetch-tiktok-data', {
+        body: { tiktokUsername: username }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to fetch TikTok data');
+      }
+      
+      console.log('TikTok data fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching TikTok data:', error);
+      toast({
+        title: "Warning",
+        description: "Could not fetch your TikTok metrics. Your username was saved but metrics are unavailable.",
+        variant: "destructive",
+      });
+      return null;
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -38,9 +61,30 @@ const TikTokUsernameForm = () => {
     setIsSubmitting(true);
     
     try {
+      // Format username (add @ if not present)
+      const formattedUsername = tiktokUsername.startsWith('@') 
+        ? tiktokUsername 
+        : `@${tiktokUsername}`;
+      
+      // Fetch TikTok data from Apify
+      const tiktokData = await fetchTikTokData(formattedUsername);
+      
+      // Prepare profile update data
+      const updateData: any = { tiktok_username: formattedUsername };
+      
+      // Add TikTok metrics if available
+      if (tiktokData) {
+        updateData.avatar_url = tiktokData.avatar;
+        updateData.following = tiktokData.following;
+        updateData.fans = tiktokData.fans;
+        updateData.heart = tiktokData.heart;
+        updateData.video = tiktokData.video;
+      }
+      
+      // Update profile in Supabase
       const { error } = await supabase
         .from('profiles')
-        .update({ tiktok_username: tiktokUsername })
+        .update(updateData)
         .eq('id', user.id);
       
       if (error) throw error;

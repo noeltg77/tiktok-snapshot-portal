@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const ProfilePage = () => {
   const { user, profile, loading, profileLoading } = useAuth();
@@ -20,6 +21,11 @@ const ProfilePage = () => {
     return <Navigate to="/auth" replace />;
   }
 
+  // Format username by removing @ if present
+  const displayUsername = profile?.tiktok_username?.startsWith('@') 
+    ? profile.tiktok_username.substring(1) 
+    : profile?.tiktok_username;
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex h-screen">
@@ -29,10 +35,22 @@ const ProfilePage = () => {
           
           <Card className="mb-6">
             <CardHeader>
-              <CardTitle>Account Information</CardTitle>
+              <div className="flex items-center space-x-4">
+                <Avatar className="h-20 w-20">
+                  {profile?.avatar_url ? (
+                    <AvatarImage src={profile.avatar_url} alt={displayUsername || 'User'} />
+                  ) : (
+                    <AvatarFallback>{displayUsername?.substring(0, 2) || user.email?.substring(0, 2) || 'U'}</AvatarFallback>
+                  )}
+                </Avatar>
+                <div>
+                  <CardTitle className="text-xl">{displayUsername || 'TikTok User'}</CardTitle>
+                  <p className="text-sm text-gray-500">{user.email}</p>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Email</p>
                   <p>{user.email}</p>
@@ -41,6 +59,26 @@ const ProfilePage = () => {
                 <div>
                   <p className="text-sm font-medium text-gray-500">TikTok Username</p>
                   <p>{profile?.tiktok_username}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Followers</p>
+                  <p>{profile?.fans || '0'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Following</p>
+                  <p>{profile?.following || '0'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Total Likes</p>
+                  <p>{profile?.heart || '0'}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Videos</p>
+                  <p>{profile?.video || '0'}</p>
                 </div>
               </div>
             </CardContent>

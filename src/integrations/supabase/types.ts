@@ -13,26 +13,38 @@ export type Database = {
         Row: {
           avatar_url: string | null
           created_at: string
+          fans: number | null
+          following: number | null
+          heart: number | null
           id: string
           tiktok_username: string | null
           updated_at: string
           username: string | null
+          video: number | null
         }
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          fans?: number | null
+          following?: number | null
+          heart?: number | null
           id: string
           tiktok_username?: string | null
           updated_at?: string
           username?: string | null
+          video?: number | null
         }
         Update: {
           avatar_url?: string | null
           created_at?: string
+          fans?: number | null
+          following?: number | null
+          heart?: number | null
           id?: string
           tiktok_username?: string | null
           updated_at?: string
           username?: string | null
+          video?: number | null
         }
         Relationships: []
       }
