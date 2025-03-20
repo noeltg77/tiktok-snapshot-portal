@@ -3,6 +3,7 @@ import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { RefreshCw } from "lucide-react";
+import TikTokPosts from "./TikTokPosts";
 
 const StatCard = ({ title, value }: { title: string; value: string | number }) => {
   return (
@@ -63,7 +64,7 @@ export const DashboardContent = () => {
   };
   
   return (
-    <div className="flex flex-1 flex-col">
+    <div className="flex flex-1 flex-col overflow-auto">
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">Welcome, {profile?.tiktok_username || 'User'}</h1>
         
@@ -96,6 +97,9 @@ export const DashboardContent = () => {
           <StatCard title="Total Likes" value={profile?.heart ?? 0} />
           <StatCard title="Videos" value={profile?.video ?? 0} />
         </div>
+        
+        {/* Add TikTok Posts Component */}
+        <TikTokPosts />
       </div>
     </div>
   );
