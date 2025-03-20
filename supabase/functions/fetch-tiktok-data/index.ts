@@ -13,7 +13,22 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { tiktokUsername } = await req.json();
+    // Parse the request body
+    let tiktokUsername;
+    try {
+      const body = await req.json();
+      tiktokUsername = body.tiktokUsername;
+      
+      console.log('Received request with body:', JSON.stringify(body));
+    } catch (error) {
+      console.error('Error parsing request body:', error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request body. Expected JSON with a tiktokUsername field.' 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     // Parameter validation
     if (!tiktokUsername) {
