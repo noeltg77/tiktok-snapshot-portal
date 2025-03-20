@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   Heart,
   MessageCircle,
-  Share2,
+  Share,
   Bookmark,
   MoreHorizontal,
   Link as LinkIcon,
@@ -35,6 +35,7 @@ interface SocialCardProps {
     comments?: number;
     shares?: number;
     views?: number;
+    bookmarks?: number;
     isLiked?: boolean;
     isBookmarked?: boolean;
   };
@@ -60,6 +61,7 @@ export function SocialCard({
   const [isLiked, setIsLiked] = useState(engagement?.isLiked ?? false);
   const [isBookmarked, setIsBookmarked] = useState(engagement?.isBookmarked ?? false);
   const [likes, setLikes] = useState(engagement?.likes ?? 0);
+  const [bookmarks, setBookmarks] = useState(engagement?.bookmarks ?? 0);
 
   const handleLike = () => {
     setIsLiked(!isLiked);
@@ -69,6 +71,7 @@ export function SocialCard({
 
   const handleBookmark = () => {
     setIsBookmarked(!isBookmarked);
+    setBookmarks(prev => isBookmarked ? prev - 1 : prev + 1);
     onBookmark?.();
   };
 
@@ -110,7 +113,7 @@ export function SocialCard({
             </button>
           </div>
 
-          {/* Engagement section - Updated with views */}
+          {/* Engagement section - Updated with views and bookmarks */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
@@ -144,29 +147,32 @@ export function SocialCard({
                 onClick={onShare}
                 className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors"
               >
-                <Share2 className="w-5 h-5" />
+                <Share className="w-5 h-5" />
                 <span>{engagement?.shares}</span>
               </button>
               <div className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400">
                 <Eye className="w-5 h-5" />
                 <span>{engagement?.views?.toLocaleString() || 0}</span>
               </div>
+              <button
+                type="button"
+                onClick={handleBookmark}
+                className={cn(
+                  "flex items-center gap-1 text-sm transition-colors",
+                  isBookmarked 
+                    ? "text-yellow-500" 
+                    : "text-zinc-500 dark:text-zinc-400 hover:text-yellow-500"
+                )}
+              >
+                <Bookmark
+                  className={cn(
+                    "w-5 h-5 transition-all",
+                    isBookmarked && "fill-current scale-110"
+                  )}
+                />
+                <span>{bookmarks}</span>
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleBookmark}
-              className={cn(
-                "p-2 rounded-full transition-all",
-                isBookmarked 
-                  ? "text-yellow-500 bg-yellow-50 dark:bg-yellow-500/10" 
-                  : "text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-              )}
-            >
-              <Bookmark className={cn(
-                "w-5 h-5 transition-transform",
-                isBookmarked && "fill-current scale-110"
-              )} />
-            </button>
           </div>
 
           {/* Image section - Now third */}
