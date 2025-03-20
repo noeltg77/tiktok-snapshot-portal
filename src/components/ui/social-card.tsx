@@ -59,6 +59,9 @@ export function SocialCard({
   onMore,
   className
 }: SocialCardProps) {
+  // Ensure hashtags is always an array
+  const hashtags = Array.isArray(content?.hashtags) ? content.hashtags : [];
+
   return (
     <div
       className={cn(
@@ -187,9 +190,9 @@ export function SocialCard({
           )}
           
           {/* Hashtags section */}
-          {content?.hashtags && content.hashtags.length > 0 && (
+          {hashtags.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-2">
-              {content.hashtags.map((tag, index) => (
+              {hashtags.map((tag, index) => (
                 <div 
                   key={index}
                   className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs"

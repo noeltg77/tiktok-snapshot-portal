@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -172,7 +173,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         comment_count: video.commentCount,
         cover_url: video.coverUrl,
         video_url: video.downloadLink,
-        hashtags: video.hashtags,
+        hashtags: Array.isArray(video.hashtags) ? JSON.stringify(video.hashtags) : '[]',
         tiktok_created_at: new Date(video.createTime).toISOString()
       }));
       

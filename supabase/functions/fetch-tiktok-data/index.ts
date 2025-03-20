@@ -105,7 +105,7 @@ Deno.serve(async (req) => {
           collectCount: item.collectCount || 0,
           coverUrl: item.covers && item.covers.length > 0 ? item.covers[0] : null,
           downloadLink: item.videoUrl || null,
-          hashtags: item.hashtags || []
+          hashtags: Array.isArray(item.hashtags) ? item.hashtags : []
         }))
       };
       

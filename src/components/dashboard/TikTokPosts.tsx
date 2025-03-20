@@ -127,11 +127,11 @@ const TikTokPosts = () => {
         digg_count: video.diggCount,
         share_count: video.shareCount,
         play_count: video.playCount,
-        collect_count: video.collectCount,
+        collect_count: video.collectCount || 0,
         comment_count: video.commentCount,
         cover_url: video.coverUrl,
         video_url: video.downloadLink,
-        hashtags: JSON.stringify(video.hashtags),
+        hashtags: Array.isArray(video.hashtags) ? JSON.stringify(video.hashtags) : '[]',
         tiktok_created_at: new Date(video.createTime).toISOString()
       }));
       
@@ -203,32 +203,46 @@ const TikTokPosts = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {posts.map(post => (
-            <SocialCard
-              key={post.id}
-              author={{
-                name: profile?.tiktok_username || "User",
-                username: profile?.tiktok_username?.replace('@', '') || "user",
-                avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=600&crop=1",
-                timeAgo: new Date(post.tiktok_created_at).toLocaleDateString(),
-              }}
-              content={{
-                text: post.text,
-                image: post.cover_url,
-                hashtags: typeof post.hashtags === 'string' ? JSON.parse(post.hashtags) : post.hashtags,
-              }}
-              engagement={{
-                likes: post.digg_count,
-                comments: post.comment_count,
-                shares: post.share_count,
-                views: post.play_count,
-                bookmarks: post.collect_count,
-                isLiked: false,
-                isBookmarked: false,
-              }}
-              onComment={() => handleAction(post.id, 'commented')}
-            />
-          ))}
+          {posts.map(post => {
+            // Safely parse hashtags from JSON string
+            let hashtags = [];
+            try {
+              if (typeof post.hashtags === 'string') {
+                hashtags = JSON.parse(post.hashtags);
+              } else if (Array.isArray(post.hashtags)) {
+                hashtags = post.hashtags;
+              }
+            } catch (e) {
+              console.error('Error parsing hashtags:', e);
+            }
+            
+            return (
+              <SocialCard
+                key={post.id}
+                author={{
+                  name: profile?.tiktok_username || "User",
+                  username: profile?.tiktok_username?.replace('@', '') || "user",
+                  avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=600&crop=1",
+                  timeAgo: new Date(post.tiktok_created_at).toLocaleDateString(),
+                }}
+                content={{
+                  text: post.text,
+                  image: post.cover_url,
+                  hashtags: hashtags,
+                }}
+                engagement={{
+                  likes: post.digg_count,
+                  comments: post.comment_count,
+                  shares: post.share_count,
+                  views: post.play_count,
+                  bookmarks: post.collect_count,
+                  isLiked: false,
+                  isBookmarked: false,
+                }}
+                onComment={() => handleAction(post.id, 'commented')}
+              />
+            );
+          })}
         </div>
       )}
     </div>
