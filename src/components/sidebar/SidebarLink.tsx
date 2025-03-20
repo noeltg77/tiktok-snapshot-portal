@@ -1,6 +1,6 @@
 
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useSidebar } from "./SidebarContext";
 
@@ -15,12 +15,16 @@ export const SidebarLink = ({
   };
   className?: string;
 }) => {
-  const { open, animate } = useSidebar();
+  const { open } = useSidebar();
+  const location = useLocation();
+  const isActive = location.pathname === link.href;
+  
   return (
     <Link
       to={link.href}
       className={cn(
         "flex items-center justify-start gap-2 group/sidebar py-2",
+        isActive ? "bg-gray-200 dark:bg-neutral-700 rounded-md px-2" : "",
         className
       )}
     >
@@ -29,8 +33,8 @@ export const SidebarLink = ({
         className={cn(
           "text-neutral-700 dark:text-neutral-200 text-sm group-hover/sidebar:translate-x-1 transition duration-150 whitespace-pre inline-block !p-0 !m-0",
           {
-            "opacity-0 hidden": animate && !open,
-            "opacity-100": animate && open,
+            "opacity-0 hidden": !open,
+            "opacity-100": open,
           }
         )}
       >
