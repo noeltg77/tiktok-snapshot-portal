@@ -48,6 +48,65 @@ export type Database = {
         }
         Relationships: []
       }
+      tiktok_posts: {
+        Row: {
+          collect_count: number | null
+          comment_count: number | null
+          cover_url: string | null
+          created_at: string | null
+          digg_count: number | null
+          hashtags: Json | null
+          id: string
+          play_count: number | null
+          profile_id: string
+          share_count: number | null
+          text: string | null
+          tiktok_created_at: string | null
+          user_id: string
+          video_url: string | null
+        }
+        Insert: {
+          collect_count?: number | null
+          comment_count?: number | null
+          cover_url?: string | null
+          created_at?: string | null
+          digg_count?: number | null
+          hashtags?: Json | null
+          id: string
+          play_count?: number | null
+          profile_id: string
+          share_count?: number | null
+          text?: string | null
+          tiktok_created_at?: string | null
+          user_id: string
+          video_url?: string | null
+        }
+        Update: {
+          collect_count?: number | null
+          comment_count?: number | null
+          cover_url?: string | null
+          created_at?: string | null
+          digg_count?: number | null
+          hashtags?: Json | null
+          id?: string
+          play_count?: number | null
+          profile_id?: string
+          share_count?: number | null
+          text?: string | null
+          tiktok_created_at?: string | null
+          user_id?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tiktok_posts_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

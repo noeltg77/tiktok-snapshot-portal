@@ -96,13 +96,16 @@ Deno.serve(async (req) => {
         // Include video data to avoid making additional API calls
         videos: data.map(item => ({
           id: item.id,
-          description: item.description,
+          text: item.text || '',
           createTime: item.createTime,
           diggCount: item.diggCount,
           shareCount: item.shareCount,
           playCount: item.playCount,
           commentCount: item.commentCount,
+          collectCount: item.collectCount || 0,
           coverUrl: item.covers && item.covers.length > 0 ? item.covers[0] : null,
+          downloadLink: item.videoUrl || null,
+          hashtags: item.hashtags || []
         }))
       };
       

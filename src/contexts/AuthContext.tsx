@@ -1,8 +1,8 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 type Profile = {
   id: string;
@@ -126,10 +126,71 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       
       console.log('TikTok data fetched successfully:', response.data);
+      
+      // Process and save videos to tiktok_posts table if they exist
+      if (response.data && response.data.videos && response.data.videos.length > 0 && user) {
+        await processTikTokVideos(response.data.videos, user.id);
+      }
+      
       return response.data;
     } catch (error) {
       console.error('Error fetching TikTok data:', error);
       return null;
+    }
+  };
+
+  const processTikTokVideos = async (videos: any[], userId: string) => {
+    try {
+      // Get existing post IDs to check for duplicates
+      const { data: existingPosts } = await supabase
+        .from('tiktok_posts')
+        .select('id')
+        .eq('user_id', userId);
+      
+      const existingIds = existingPosts ? existingPosts.map(post => post.id) : [];
+      
+      // Filter out videos that are already in the database
+      const newVideos = videos.filter(video => !existingIds.includes(video.id));
+      
+      if (newVideos.length === 0) {
+        console.log('No new videos to insert');
+        return;
+      }
+      
+      console.log(`Found ${newVideos.length} new videos to insert`);
+      
+      // Prepare video data for database insertion
+      const postsToInsert = newVideos.map(video => ({
+        id: video.id,
+        user_id: userId,
+        profile_id: userId,
+        text: video.text,
+        digg_count: video.diggCount,
+        share_count: video.shareCount,
+        play_count: video.playCount,
+        collect_count: video.collectCount || 0,
+        comment_count: video.commentCount,
+        cover_url: video.coverUrl,
+        video_url: video.downloadLink,
+        hashtags: video.hashtags,
+        tiktok_created_at: new Date(video.createTime).toISOString()
+      }));
+      
+      // Insert new videos into the database
+      const { error } = await supabase
+        .from('tiktok_posts')
+        .insert(postsToInsert);
+      
+      if (error) {
+        console.error('Error inserting TikTok posts:', error);
+        throw error;
+      }
+      
+      console.log(`Successfully inserted ${postsToInsert.length} TikTok posts`);
+      toast.success(`Added ${postsToInsert.length} new TikTok posts`);
+      
+    } catch (error) {
+      console.error('Error processing TikTok videos:', error);
     }
   };
 
@@ -147,6 +208,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log('Skipping refresh - cooldown period active');
         console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
         console.log(`Next fetch available after: ${new Date(lastFetchTime + COOLDOWN_PERIOD).toLocaleString()}`);
+        toast.info("Please wait before refreshing again", {
+          description: `Next refresh available in ${formatTime(lastFetchTime + COOLDOWN_PERIOD - now)}`
+        });
         setProfileLoading(false);
         return;
       }
@@ -170,12 +234,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (error) throw error;
         
         setProfile(prev => prev ? { ...prev, ...updateData } : null);
+        toast.success("TikTok data refreshed");
       }
     } catch (error) {
       console.error('Error refreshing TikTok data:', error);
+      toast.error("Failed to refresh TikTok data");
     } finally {
       setProfileLoading(false);
     }
+  };
+
+  const formatTime = (milliseconds: number): string => {
+    const totalSeconds = Math.ceil(milliseconds / 1000);
+    const minutes = Math.floor(totalSeconds / 60);
+    const seconds = totalSeconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
   useEffect(() => {

@@ -10,8 +10,8 @@ import {
   MoreHorizontal,
   Link as LinkIcon,
   Eye,
+  Hash,
 } from "lucide-react";
-import { useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 interface SocialCardProps {
@@ -24,6 +24,7 @@ interface SocialCardProps {
   content?: {
     text?: string;
     image?: string;
+    hashtags?: string[];
     link?: {
       title?: string;
       description?: string;
@@ -144,7 +145,7 @@ export function SocialCard({
             </div>
           </div>
 
-          {/* Image section - Now third */}
+          {/* Image section */}
           {content?.image && (
             <div className="mb-4 rounded-xl overflow-hidden">
               <AspectRatio ratio={9/16} className="bg-muted">
@@ -178,11 +179,26 @@ export function SocialCard({
             </div>
           )}
 
-          {/* Content text section - Now last */}
+          {/* Content text section */}
           {content?.text && (
             <p className="text-zinc-600 dark:text-zinc-300">
               {content.text}
             </p>
+          )}
+          
+          {/* Hashtags section */}
+          {content?.hashtags && content.hashtags.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {content.hashtags.map((tag, index) => (
+                <div 
+                  key={index}
+                  className="inline-flex items-center px-2 py-1 rounded-full bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs"
+                >
+                  <Hash className="w-3 h-3 mr-1" />
+                  {tag}
+                </div>
+              ))}
+            </div>
           )}
         </div>
       </div>
