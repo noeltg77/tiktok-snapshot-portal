@@ -58,6 +58,26 @@ const TikTokPosts = () => {
         isBookmarked: true,
       },
     },
+    {
+      id: 3,
+      author: {
+        name: profile?.tiktok_username || "User",
+        username: profile?.tiktok_username?.replace('@', '') || "user",
+        avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=600&crop=1",
+        timeAgo: "1w ago",
+      },
+      content: {
+        text: "My most popular video yet! Thanks for all the support! 🙏 #fyp #viral",
+        image: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800",
+      },
+      engagement: {
+        likes: 7824,
+        comments: 321,
+        shares: 154,
+        isLiked: false,
+        isBookmarked: false,
+      },
+    },
   ];
 
   return (
