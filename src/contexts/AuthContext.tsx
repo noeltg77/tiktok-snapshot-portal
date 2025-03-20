@@ -44,17 +44,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       try {
         setProfileLoading(true);
+        
+        // Try to get the profile
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', user.id)
-          .single();
-
+          .maybeSingle();
+        
         if (error) {
           console.error('Error fetching profile:', error);
           setProfile(null);
-        } else {
+        } else if (data) {
+          // Profile exists
           setProfile(data);
+        } else {
+          // Profile doesn't exist, create it
+          console.log('Profile not found, creating a new one...');
+          const { data: newProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert({ 
+              id: user.id,
+              username: user.email 
+            })
+            .select('*')
+            .single();
+          
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            setProfile(null);
+          } else {
+            setProfile(newProfile);
+          }
         }
       } catch (error) {
         console.error('Error fetching profile:', error);
