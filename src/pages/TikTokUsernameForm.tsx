@@ -50,8 +50,13 @@ const TikTokUsernameForm = () => {
         description: "Your TikTok username has been saved successfully.",
       });
       
-      // Force redirect to dashboard with replace to prevent back navigation
-      navigate('/dashboard', { replace: true });
+      // Update local auth context first to ensure state consistency
+      setTimeout(() => {
+        console.log("Redirecting to dashboard after saving username");
+        // Use window.location for a hard redirect that forces a fresh load
+        window.location.href = '/dashboard';
+      }, 1000);
+      
     } catch (error: any) {
       console.error("Error saving TikTok username:", error);
       toast({
