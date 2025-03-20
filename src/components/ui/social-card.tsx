@@ -30,6 +30,7 @@ interface SocialCardProps {
       description?: string;
       icon?: React.ReactNode;
     };
+    videoUrl?: string; // Add videoUrl property
   };
   engagement?: {
     likes?: number;
@@ -61,6 +62,13 @@ export function SocialCard({
 }: SocialCardProps) {
   // Ensure hashtags is always an array
   const hashtags = Array.isArray(content?.hashtags) ? content.hashtags : [];
+
+  // Function to handle video click
+  const handleVideoClick = () => {
+    if (content?.videoUrl) {
+      window.open(content.videoUrl, '_blank');
+    }
+  };
 
   return (
     <div
@@ -148,15 +156,24 @@ export function SocialCard({
             </div>
           </div>
 
-          {/* Image section */}
+          {/* Image section - Make it clickable with cursor-pointer */}
           {content?.image && (
-            <div className="mb-4 rounded-xl overflow-hidden">
+            <div 
+              className="mb-4 rounded-xl overflow-hidden cursor-pointer relative group"
+              onClick={handleVideoClick}
+            >
               <AspectRatio ratio={9/16} className="bg-muted">
                 <img
                   src={content.image}
                   alt="Post content"
-                  className="w-full h-full object-cover"
+                  className="w-full h-full object-cover transition-transform group-hover:scale-105"
                 />
+                {/* Add play indicator overlay */}
+                <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center">
+                    <div className="w-0 h-0 border-y-8 border-y-transparent border-l-12 border-l-blue-600 ml-1"></div>
+                  </div>
+                </div>
               </AspectRatio>
             </div>
           )}

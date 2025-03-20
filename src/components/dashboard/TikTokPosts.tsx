@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { SocialCard } from "@/components/ui/social-card";
 import { Link as LinkIcon, CloudOff, CloudDownload, Hash } from "lucide-react";
@@ -243,6 +244,7 @@ const TikTokPosts = () => {
                   text: post.text,
                   image: post.cover_url,
                   hashtags: hashtagsArray,
+                  videoUrl: post.video_url, // Pass the video_url to the SocialCard
                 }}
                 engagement={{
                   likes: post.digg_count,
