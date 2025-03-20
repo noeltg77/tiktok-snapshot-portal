@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { LayoutDashboard, UserCog, Settings, LogOut } from "lucide-react";
+import { LayoutDashboard, Hash, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -25,10 +25,10 @@ export const DashboardSidebar = () => {
       ),
     },
     {
-      label: "Profile",
-      href: "/profile",
+      label: "Hashtags",
+      href: "/hashtags",
       icon: (
-        <UserCog className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <Hash className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
