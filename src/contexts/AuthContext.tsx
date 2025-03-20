@@ -28,6 +28,8 @@ type AuthContextType = {
   refreshTikTokData: () => Promise<void>;
   getNextRefreshTime: () => Date | null;
   getCooldownRemaining: () => number | null;
+  isDataFetchingEnabled: boolean;
+  setDataFetchingEnabled: (enabled: boolean) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -36,6 +38,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const LAST_FETCH_KEY = 'tiktok_last_fetch_time';
 // 5 minutes in milliseconds
 const COOLDOWN_PERIOD = 5 * 60 * 1000;
+// Key for data fetching preference
+const DATA_FETCHING_ENABLED_KEY = 'tiktok_data_fetching_enabled';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -44,7 +48,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const [initialDataFetchDone, setInitialDataFetchDone] = useState(false);
+  const [isDataFetchingEnabled, setIsDataFetchingEnabled] = useState(() => {
+    // Initialize from localStorage, default to true
+    const savedPreference = localStorage.getItem(DATA_FETCHING_ENABLED_KEY);
+    return savedPreference === null ? true : savedPreference === 'true';
+  });
   const navigate = useNavigate();
+  
+  // Save data fetching preference to localStorage
+  const setDataFetchingEnabled = (enabled: boolean) => {
+    setIsDataFetchingEnabled(enabled);
+    localStorage.setItem(DATA_FETCHING_ENABLED_KEY, enabled.toString());
+  };
   
   // Get last fetch time from localStorage instead of state to persist across refreshes
   const getLastFetchTime = (): number | null => {
@@ -78,6 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchTikTokData = async (username: string) => {
+    // If data fetching is disabled, skip API call
+    if (!isDataFetchingEnabled) {
+      console.log('Data fetching is disabled, skipping API call');
+      return null;
+    }
+    
     try {
       const now = Date.now();
       const lastFetchTime = getLastFetchTime();
@@ -113,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshTikTokData = async () => {
-    if (!user || !profile?.tiktok_username) return;
+    if (!user || !profile?.tiktok_username || !isDataFetchingEnabled) return;
     
     try {
       setProfileLoading(true);
@@ -272,6 +293,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     refreshTikTokData,
     getNextRefreshTime,
     getCooldownRemaining,
+    isDataFetchingEnabled,
+    setDataFetchingEnabled,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

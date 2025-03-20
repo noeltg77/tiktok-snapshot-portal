@@ -1,11 +1,35 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { SocialCard } from "@/components/ui/social-card";
-import { Link as LinkIcon } from "lucide-react";
+import { Link as LinkIcon, CloudOff, CloudDownload } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { toast } from "sonner";
 
 const TikTokPosts = () => {
-  const { profile } = useAuth();
+  const { profile, setDataFetchingEnabled, isDataFetchingEnabled } = useAuth();
+  const [initialized, setInitialized] = useState(false);
+  
+  useEffect(() => {
+    // This ensures we don't show a toast on initial render
+    if (!initialized) {
+      setInitialized(true);
+      return;
+    }
+    
+    if (isDataFetchingEnabled) {
+      toast.success("Data fetching enabled", {
+        description: "TikTok data will be refreshed when the refresh button is clicked",
+        icon: <CloudDownload className="h-4 w-4" />
+      });
+    } else {
+      toast.info("Data fetching disabled", {
+        description: "TikTok data will not be refreshed",
+        icon: <CloudOff className="h-4 w-4" />
+      });
+    }
+  }, [isDataFetchingEnabled, initialized]);
   
   const handleAction = (id: number, action: string) => {
     console.log(`Post ${id}: ${action}`);
