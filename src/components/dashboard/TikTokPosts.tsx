@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { SocialCard } from "@/components/ui/social-card";
 import { Link as LinkIcon, CloudOff, CloudDownload, Hash } from "lucide-react";
@@ -10,7 +9,6 @@ const TikTokPosts = () => {
   const { profile, isDataFetchingEnabled } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
   
   // Fetch posts on component mount
   useEffect(() => {
@@ -143,7 +141,7 @@ const TikTokPosts = () => {
           cover_url: video.coverUrl,
           video_url: video.downloadLink,
           hashtags: hashtagsJson,
-          tiktok_created_at: new Date(video.createTime).toISOString()
+          tiktok_created_at: new Date(video.createTime * 1000).toISOString()
         };
       });
       

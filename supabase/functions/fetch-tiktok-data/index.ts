@@ -98,6 +98,20 @@ Deno.serve(async (req) => {
           );
         }
 
+        // Check if videoMeta.coverUrl exists, otherwise try item.covers
+        let coverUrl = null;
+        if (item.videoMeta && item.videoMeta.coverUrl) {
+          coverUrl = item.videoMeta.coverUrl;
+        } else if (item.covers && item.covers.length > 0) {
+          coverUrl = item.covers[0];
+        }
+
+        // Use webVideoUrl as the primary video URL
+        let videoUrl = item.webVideoUrl || null;
+        if (!videoUrl && item.videoUrl) {
+          videoUrl = item.videoUrl;
+        }
+
         return {
           id: item.id,
           text: item.text || '',
@@ -107,8 +121,8 @@ Deno.serve(async (req) => {
           playCount: item.playCount,
           commentCount: item.commentCount,
           collectCount: item.collectCount || 0,
-          coverUrl: item.covers && item.covers.length > 0 ? item.covers[0] : null,
-          downloadLink: item.videoUrl || null,
+          coverUrl: coverUrl,
+          downloadLink: videoUrl,
           hashtags: hashtags
         };
       });
