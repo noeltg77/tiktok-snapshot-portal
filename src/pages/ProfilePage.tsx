@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -7,7 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const ProfilePage = () => {
-  const { user, profile, loading, profileLoading } = useAuth();
+  const { user, profile, loading, profileLoading, refreshTikTokData } = useAuth();
+
+  // Refresh TikTok data when profile page loads
+  useEffect(() => {
+    if (user && profile?.tiktok_username) {
+      refreshTikTokData();
+    }
+  }, [user, profile?.tiktok_username]);
 
   if (loading || profileLoading) {
     return (

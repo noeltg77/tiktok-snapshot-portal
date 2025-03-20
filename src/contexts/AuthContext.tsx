@@ -9,6 +9,10 @@ type Profile = {
   username: string | null;
   tiktok_username: string | null;
   avatar_url: string | null;
+  following: number | null;
+  fans: number | null;
+  heart: number | null;
+  video: number | null;
 }
 
 type AuthContextType = {
@@ -21,6 +25,7 @@ type AuthContextType = {
   loading: boolean;
   profileLoading: boolean;
   hasTikTokUsername: boolean;
+  refreshTikTokData: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,6 +37,60 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Function to fetch TikTok data
+  const fetchTikTokData = async (username: string) => {
+    try {
+      const response = await supabase.functions.invoke('fetch-tiktok-data', {
+        body: { tiktokUsername: username }
+      });
+      
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to fetch TikTok data');
+      }
+      
+      console.log('TikTok data fetched successfully:', response.data);
+      return response.data;
+    } catch (error) {
+      console.error('Error fetching TikTok data:', error);
+      return null;
+    }
+  };
+
+  // Function to refresh TikTok data
+  const refreshTikTokData = async () => {
+    if (!user || !profile?.tiktok_username) return;
+    
+    try {
+      setProfileLoading(true);
+      const tiktokData = await fetchTikTokData(profile.tiktok_username);
+      
+      if (tiktokData) {
+        // Update profile in Supabase with new TikTok data
+        const updateData = {
+          avatar_url: tiktokData.avatar,
+          following: tiktokData.following,
+          fans: tiktokData.fans,
+          heart: tiktokData.heart,
+          video: tiktokData.video
+        };
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update(updateData)
+          .eq('id', user.id);
+          
+        if (error) throw error;
+        
+        // Update local profile state
+        setProfile(prev => prev ? { ...prev, ...updateData } : null);
+      }
+    } catch (error) {
+      console.error('Error refreshing TikTok data:', error);
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   // Fetch profile data when user changes
   useEffect(() => {
@@ -58,6 +117,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (data) {
           // Profile exists
           setProfile(data);
+          
+          // If profile has a TikTok username, refresh the TikTok data
+          if (data.tiktok_username) {
+            const tiktokData = await fetchTikTokData(data.tiktok_username);
+            
+            if (tiktokData) {
+              // Update profile in Supabase with refreshed TikTok data
+              const updateData = {
+                avatar_url: tiktokData.avatar,
+                following: tiktokData.following,
+                fans: tiktokData.fans,
+                heart: tiktokData.heart,
+                video: tiktokData.video
+              };
+              
+              const { error: updateError } = await supabase
+                .from('profiles')
+                .update(updateData)
+                .eq('id', user.id);
+                
+              if (!updateError) {
+                // Update local profile state with the refreshed data
+                setProfile({ ...data, ...updateData });
+              }
+            }
+          }
         } else {
           // Profile doesn't exist, create it
           console.log('Profile not found, creating a new one...');
@@ -138,6 +223,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     loading,
     profileLoading,
     hasTikTokUsername,
+    refreshTikTokData,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

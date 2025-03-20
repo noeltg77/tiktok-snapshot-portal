@@ -6,8 +6,15 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { DashboardContent } from "@/components/dashboard/DashboardContent";
 
 const Dashboard = () => {
-  const { user, loading, profileLoading, hasTikTokUsername } = useAuth();
+  const { user, loading, profileLoading, hasTikTokUsername, refreshTikTokData } = useAuth();
   const navigate = useNavigate();
+  
+  // Refresh TikTok data when dashboard loads
+  useEffect(() => {
+    if (user && hasTikTokUsername) {
+      refreshTikTokData();
+    }
+  }, [user, hasTikTokUsername]);
   
   // Redirect to TikTok username form if user doesn't have a username set
   useEffect(() => {
