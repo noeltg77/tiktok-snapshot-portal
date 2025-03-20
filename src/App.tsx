@@ -8,6 +8,8 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import ProfilePage from "./pages/ProfilePage";
+import SettingsPage from "./pages/SettingsPage";
 import TikTokUsernameForm from "./pages/TikTokUsernameForm";
 import NotFound from "./pages/NotFound";
 
@@ -24,6 +26,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route path="/tiktok-username" element={<TikTokUsernameForm />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
