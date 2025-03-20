@@ -58,23 +58,6 @@ export function SocialCard({
   onMore,
   className
 }: SocialCardProps) {
-  const [isLiked, setIsLiked] = useState(engagement?.isLiked ?? false);
-  const [isBookmarked, setIsBookmarked] = useState(engagement?.isBookmarked ?? false);
-  const [likes, setLikes] = useState(engagement?.likes ?? 0);
-  const [bookmarks, setBookmarks] = useState(engagement?.bookmarks ?? 0);
-
-  const handleLike = () => {
-    setIsLiked(!isLiked);
-    setLikes(prev => isLiked ? prev - 1 : prev + 1);
-    onLike?.();
-  };
-
-  const handleBookmark = () => {
-    setIsBookmarked(!isBookmarked);
-    setBookmarks(prev => isBookmarked ? prev - 1 : prev + 1);
-    onBookmark?.();
-  };
-
   return (
     <div
       className={cn(
@@ -113,27 +96,20 @@ export function SocialCard({
             </button>
           </div>
 
-          {/* Engagement section - Updated to be colorful and some non-clickable */}
+          {/* Engagement section - All stats now non-clickable except comments */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={handleLike}
-                className={cn(
-                  "flex items-center gap-1 text-sm transition-colors",
-                  isLiked
-                    ? "text-rose-600"
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-rose-600"
-                )}
-              >
+              {/* Like stat - Now non-clickable and colored */}
+              <div className="flex items-center gap-1 text-sm text-rose-600">
                 <Heart
                   className={cn(
-                    "w-5 h-5 transition-all",
-                    isLiked && "fill-current scale-110"
+                    "w-5 h-5",
+                    engagement?.isLiked && "fill-current"
                   )}
                 />
-                <span>{likes}</span>
-              </button>
+                <span>{engagement?.likes}</span>
+              </div>
+              
               <button
                 type="button"
                 onClick={onComment}
@@ -142,34 +118,29 @@ export function SocialCard({
                 <MessageCircle className="w-5 h-5" />
                 <span>{engagement?.comments}</span>
               </button>
-              {/* Share stat - Now non-clickable and colored */}
+              
+              {/* Share stat - Non-clickable and colored */}
               <div className="flex items-center gap-1 text-sm text-green-500">
                 <Share className="w-5 h-5" />
                 <span>{engagement?.shares}</span>
               </div>
+              
               {/* Views stat - Non-clickable and colored */}
               <div className="flex items-center gap-1 text-sm text-purple-500">
                 <Eye className="w-5 h-5" />
                 <span>{engagement?.views?.toLocaleString() || 0}</span>
               </div>
-              <button
-                type="button"
-                onClick={handleBookmark}
-                className={cn(
-                  "flex items-center gap-1 text-sm transition-colors",
-                  isBookmarked 
-                    ? "text-yellow-500" 
-                    : "text-zinc-500 dark:text-zinc-400 hover:text-yellow-500"
-                )}
-              >
+              
+              {/* Bookmark stat - Now non-clickable and colored */}
+              <div className="flex items-center gap-1 text-sm text-yellow-500">
                 <Bookmark
                   className={cn(
-                    "w-5 h-5 transition-all",
-                    isBookmarked && "fill-current scale-110"
+                    "w-5 h-5",
+                    engagement?.isBookmarked && "fill-current"
                   )}
                 />
-                <span>{bookmarks}</span>
-              </button>
+                <span>{engagement?.bookmarks}</span>
+              </div>
             </div>
           </div>
 
