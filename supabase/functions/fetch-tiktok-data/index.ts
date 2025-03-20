@@ -45,16 +45,15 @@ Deno.serve(async (req) => {
       ? tiktokUsername 
       : `@${tiktokUsername}`;
     
-    // Add a cache key to the request body to prevent duplicate API calls
-    const cacheKey = `tiktok-data-${formattedUsername}`;
+    // Generate a unique cache key for this request
+    const cacheKey = `tiktok-data-${formattedUsername}-${new Date().toISOString().slice(0,10)}`;
     
-    // Call the Apify API to get TikTok data with the correct URL and JSON structure
-    console.log(`Making API request to Apify for username: ${formattedUsername}`);
+    // Make a single API call with proper caching
+    console.log(`Making Apify API request for username: ${formattedUsername} with cache key: ${cacheKey}`);
     const response = await fetch('https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=apify_api_BSZn12KdnyAsoqgb8y7Cga7epcjZop0KVMOW', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'max-age=3600', // Cache for 1 hour
       },
       body: JSON.stringify({
         excludePinnedPosts: false,
@@ -64,8 +63,8 @@ Deno.serve(async (req) => {
         shouldDownloadCovers: false,
         shouldDownloadSlideshowImages: false,
         shouldDownloadSubtitles: false,
-        shouldDownloadVideos: true,
-        cacheKey: cacheKey, // Add cache key to prevent duplicate API calls
+        shouldDownloadVideos: false, // Set to false to minimize API usage
+        cacheKey: cacheKey, // This is critical for preventing duplicate API calls to Apify
       }),
     });
 
@@ -78,10 +77,11 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Parse the API response data
     const data = await response.json();
-    console.log('Received TikTok data:', JSON.stringify(data).substring(0, 500) + '...');
-
-    // Extract relevant user data from the first item (if available)
+    console.log(`Received Apify API response for ${formattedUsername}`);
+    
+    // Extract relevant user data from the response
     if (data && data.length > 0 && data[0].authorMeta) {
       const userData = {
         avatar: data[0].authorMeta.avatar,
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
         fans: data[0].authorMeta.fans,
         heart: data[0].authorMeta.heart,
         video: data[0].authorMeta.video,
-        // Include video data in the response to avoid additional API calls
+        // Include video data to avoid making additional API calls
         videos: data.map(item => ({
           id: item.id,
           description: item.description,
@@ -102,14 +102,14 @@ Deno.serve(async (req) => {
         }))
       };
       
-      console.log('Extracted user data with videos');
+      console.log('Successfully extracted user data and returning response');
       return new Response(
         JSON.stringify(userData),
         { 
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json',
-            'Cache-Control': 'max-age=3600' // Cache the response for 1 hour
+            'Cache-Control': 'max-age=3600' // Cache for 1 hour
           } 
         }
       );

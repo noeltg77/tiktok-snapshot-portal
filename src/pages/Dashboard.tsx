@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -10,14 +9,14 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const dataRefreshedRef = useRef(false);
   
-  // Refresh TikTok data only once when dashboard loads
+  // Refresh TikTok data only once when dashboard loads if not in cooldown period
   useEffect(() => {
     if (user && hasTikTokUsername && !dataRefreshedRef.current) {
       console.log("Refreshing TikTok data on first dashboard load");
       refreshTikTokData();
       dataRefreshedRef.current = true;
     }
-  }, [user, hasTikTokUsername]);
+  }, [user, hasTikTokUsername, refreshTikTokData]);
   
   // Redirect to TikTok username form if user doesn't have a username set
   useEffect(() => {

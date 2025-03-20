@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,16 +35,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(true);
+  const [lastFetchTime, setLastFetchTime] = useState<number | null>(null);
   const navigate = useNavigate();
 
-  // Function to fetch TikTok data
   const fetchTikTokData = async (username: string) => {
     try {
+      const now = Date.now();
+      if (lastFetchTime && now - lastFetchTime < 3600000) {
+        console.log('Skipping API call - cooldown period active');
+        return null;
+      }
+      
       console.log(`Calling edge function for username: ${username}`);
       
       const response = await supabase.functions.invoke('fetch-tiktok-data', {
         body: { tiktokUsername: username }
       });
+      
+      setLastFetchTime(now);
       
       if (response.error) {
         console.error('Edge function error:', response.error);
@@ -60,16 +67,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Function to refresh TikTok data
   const refreshTikTokData = async () => {
     if (!user || !profile?.tiktok_username) return;
     
     try {
       setProfileLoading(true);
+      
+      const now = Date.now();
+      if (lastFetchTime && now - lastFetchTime < 3600000) {
+        console.log('Skipping refresh - cooldown period active');
+        setProfileLoading(false);
+        return;
+      }
+      
       const tiktokData = await fetchTikTokData(profile.tiktok_username);
       
       if (tiktokData) {
-        // Update profile in Supabase with new TikTok data
         const updateData = {
           avatar_url: tiktokData.avatar,
           following: tiktokData.following,
@@ -85,8 +98,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         if (error) throw error;
         
-        // Update local profile state
         setProfile(prev => prev ? { ...prev, ...updateData } : null);
+        
+        setLastFetchTime(now);
       }
     } catch (error) {
       console.error('Error refreshing TikTok data:', error);
@@ -95,7 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch profile data when user changes - only once
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
@@ -107,7 +120,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         setProfileLoading(true);
         
-        // Try to get the profile
         const { data, error } = await supabase
           .from('profiles')
           .select('*')
@@ -118,16 +130,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Error fetching profile:', error);
           setProfile(null);
         } else if (data) {
-          // Profile exists
           setProfile(data);
           
-          // Only fetch TikTok data on initial login, not on every render
           if (data.tiktok_username && !profile) {
             console.log('Initial profile load - fetching TikTok data');
             const tiktokData = await fetchTikTokData(data.tiktok_username);
             
             if (tiktokData) {
-              // Update profile in Supabase with refreshed TikTok data
               const updateData = {
                 avatar_url: tiktokData.avatar,
                 following: tiktokData.following,
@@ -142,13 +151,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
                 .eq('id', user.id);
                 
               if (!updateError) {
-                // Update local profile state with the refreshed data
                 setProfile({ ...data, ...updateData });
               }
             }
           }
         } else {
-          // Profile doesn't exist, create it
           console.log('Profile not found, creating a new one...');
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
@@ -178,7 +185,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [user]);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setSession(session);
@@ -187,7 +193,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     );
 
-    // THEN check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
@@ -214,8 +219,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await supabase.auth.signOut();
     navigate("/auth");
   };
-
-  const hasTikTokUsername = !!profile?.tiktok_username;
 
   const value = {
     session,

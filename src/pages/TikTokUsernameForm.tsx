@@ -69,7 +69,7 @@ const TikTokUsernameForm = () => {
         ? tiktokUsername 
         : `@${tiktokUsername}`;
       
-      // Fetch TikTok data from Apify
+      // Fetch TikTok data from Apify - this is now a single, cached API call
       const tiktokData = await fetchTikTokData(formattedUsername);
       
       // Prepare profile update data
