@@ -121,6 +121,9 @@ Deno.serve(async (req) => {
       };
     });
     
+    // Sort videos by playCount in descending order (highest views first)
+    processedVideos.sort((a, b) => (b.playCount || 0) - (a.playCount || 0));
+    
     // Create a Supabase client to store the results
     const supabaseUrl = Deno.env.get('SUPABASE_URL') || '';
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';

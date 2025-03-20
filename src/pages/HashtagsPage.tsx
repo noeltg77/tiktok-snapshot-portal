@@ -65,7 +65,7 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', formattedHashtag)
-        .order('tiktok_created_at', { ascending: false })
+        .order('play_count', { ascending: false }) // Order by play_count in descending order
         .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1);
       
       // If we have cached data, use it
@@ -137,6 +137,7 @@ const HashtagsPage = () => {
         console.log("Received API response:", data);
         
         if (data.videos && data.videos.length > 0) {
+          // The videos are already sorted by play_count in the edge function
           const videos = data.videos.map((video: any) => ({
             id: video.id,
             cover_url: video.coverUrl,
