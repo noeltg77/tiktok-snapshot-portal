@@ -85,7 +85,36 @@ const HashtagsPage = () => {
         setTotalPages(Math.ceil(count / postsPerPage));
       }
       
-      setSearchResults(data || []);
+      // Transform the data to ensure hashtags is always a string array
+      const transformedData = data?.map(post => {
+        let hashtagsArray: string[] = [];
+        
+        // Handle different possible formats of hashtags from the database
+        if (post.hashtags) {
+          if (Array.isArray(post.hashtags)) {
+            hashtagsArray = post.hashtags as string[];
+          } else if (typeof post.hashtags === 'string') {
+            // If it's a string, try to parse it as JSON
+            try {
+              const parsed = JSON.parse(post.hashtags);
+              hashtagsArray = Array.isArray(parsed) ? parsed : [String(post.hashtags)];
+            } catch {
+              // If parsing fails, treat it as a single hashtag
+              hashtagsArray = [String(post.hashtags)];
+            }
+          } else {
+            // For any other type, convert to string and use as a single hashtag
+            hashtagsArray = [String(post.hashtags)];
+          }
+        }
+        
+        return {
+          ...post,
+          hashtags: hashtagsArray
+        } as TikTokPost;
+      }) || [];
+      
+      setSearchResults(transformedData);
     } catch (error) {
       console.error("Error during hashtag search:", error);
     } finally {
