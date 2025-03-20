@@ -32,11 +32,14 @@ const TikTokUsernameForm = () => {
 
   const fetchTikTokData = async (username) => {
     try {
+      console.log(`Calling edge function for username: ${username}`);
+      
       const response = await supabase.functions.invoke('fetch-tiktok-data', {
         body: { tiktokUsername: username }
       });
       
       if (response.error) {
+        console.error('Edge function error:', response.error);
         throw new Error(response.error.message || 'Failed to fetch TikTok data');
       }
       

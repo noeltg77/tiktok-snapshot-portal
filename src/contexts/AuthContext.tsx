@@ -41,11 +41,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Function to fetch TikTok data
   const fetchTikTokData = async (username: string) => {
     try {
+      console.log(`Calling edge function for username: ${username}`);
+      
       const response = await supabase.functions.invoke('fetch-tiktok-data', {
         body: { tiktokUsername: username }
       });
       
       if (response.error) {
+        console.error('Edge function error:', response.error);
         throw new Error(response.error.message || 'Failed to fetch TikTok data');
       }
       

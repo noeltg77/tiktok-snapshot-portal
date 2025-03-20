@@ -46,6 +46,7 @@ Deno.serve(async (req) => {
       : `@${tiktokUsername}`;
     
     // Call the Apify API to get TikTok data with the correct URL and JSON structure
+    console.log(`Making API request to Apify for username: ${formattedUsername}`);
     const response = await fetch('https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=apify_api_BSZn12KdnyAsoqgb8y7Cga7epcjZop0KVMOW', {
       method: 'POST',
       headers: {
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
     }
 
     const data = await response.json();
-    console.log('Received TikTok data:', data);
+    console.log('Received TikTok data:', JSON.stringify(data).substring(0, 500) + '...');
 
     // Extract relevant user data from the first item (if available)
     if (data && data.length > 0 && data[0].authorMeta) {
@@ -85,6 +86,7 @@ Deno.serve(async (req) => {
         video: data[0].authorMeta.video
       };
       
+      console.log('Extracted user data:', userData);
       return new Response(
         JSON.stringify(userData),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
