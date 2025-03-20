@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Search, CloudOff } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
 
 // Define TikTok post type
 interface TikTokPost {
@@ -27,6 +28,7 @@ interface TikTokPost {
 
 const HashtagsPage = () => {
   const { user, loading } = useAuth();
+  const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState<TikTokPost[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -54,69 +56,116 @@ const HashtagsPage = () => {
     setIsSearching(true);
     
     try {
-      // Search for videos with the given hashtag
-      const { data, error } = await supabase
-        .from('tiktok_posts')
+      // First, try to get data from the searches table
+      const formattedHashtag = searchQuery.startsWith('#') 
+        ? searchQuery.substring(1) 
+        : searchQuery;
+      
+      const { data: cachedData, error: cachedError } = await supabase
+        .from('searches')
         .select('*')
-        .textSearch('hashtags', searchQuery, { 
-          type: 'plain',
-          config: 'english' 
-        })
+        .eq('search_term', formattedHashtag)
         .order('tiktok_created_at', { ascending: false })
         .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1);
       
-      if (error) {
-        console.error("Error searching hashtags:", error);
-        return;
-      }
-      
-      // Count total results for pagination
-      const { count, error: countError } = await supabase
-        .from('tiktok_posts')
-        .select('*', { count: 'exact', head: true })
-        .textSearch('hashtags', searchQuery, { 
-          type: 'plain',
-          config: 'english' 
-        });
-      
-      if (countError) {
-        console.error("Error counting hashtags:", countError);
-      } else if (count !== null) {
-        setTotalPages(Math.ceil(count / postsPerPage));
-      }
-      
-      // Transform the data to ensure hashtags is always a string array
-      const transformedData = data?.map(post => {
-        let hashtagsArray: string[] = [];
+      // If we have cached data, use it
+      if (!cachedError && cachedData && cachedData.length > 0) {
+        console.log("Using cached hashtag search data");
         
-        // Handle different possible formats of hashtags from the database
-        if (post.hashtags) {
-          if (Array.isArray(post.hashtags)) {
-            hashtagsArray = post.hashtags as string[];
-          } else if (typeof post.hashtags === 'string') {
-            // If it's a string, try to parse it as JSON
-            try {
-              const parsed = JSON.parse(post.hashtags);
-              hashtagsArray = Array.isArray(parsed) ? parsed : [String(post.hashtags)];
-            } catch {
-              // If parsing fails, treat it as a single hashtag
-              hashtagsArray = [String(post.hashtags)];
-            }
-          } else {
-            // For any other type, convert to string and use as a single hashtag
-            hashtagsArray = [String(post.hashtags)];
-          }
+        // Count total results for pagination
+        const { count, error: countError } = await supabase
+          .from('searches')
+          .select('*', { count: 'exact', head: true })
+          .eq('search_term', formattedHashtag);
+        
+        if (!countError && count !== null) {
+          setTotalPages(Math.ceil(count / postsPerPage));
         }
         
-        return {
-          ...post,
-          hashtags: hashtagsArray
-        } as TikTokPost;
-      }) || [];
-      
-      setSearchResults(transformedData);
+        // Transform the data to ensure hashtags is always a string array
+        const transformedData = cachedData.map(post => {
+          let hashtagsArray: string[] = [];
+          
+          // Handle different possible formats of hashtags from the database
+          if (post.hashtags) {
+            if (Array.isArray(post.hashtags)) {
+              hashtagsArray = post.hashtags as string[];
+            } else if (typeof post.hashtags === 'string') {
+              // If it's a string, try to parse it as JSON
+              try {
+                const parsed = JSON.parse(post.hashtags);
+                hashtagsArray = Array.isArray(parsed) ? parsed : [String(post.hashtags)];
+              } catch {
+                // If parsing fails, treat it as a single hashtag
+                hashtagsArray = [String(post.hashtags)];
+              }
+            } else {
+              // For any other type, convert to string and use as a single hashtag
+              hashtagsArray = [String(post.hashtags)];
+            }
+          }
+          
+          return {
+            id: post.video_id,
+            cover_url: post.cover_url,
+            text: post.text,
+            tiktok_created_at: post.tiktok_created_at,
+            video_url: post.video_url,
+            share_count: post.share_count,
+            play_count: post.play_count,
+            collect_count: post.collect_count,
+            comment_count: post.comment_count,
+            digg_count: post.digg_count,
+            hashtags: hashtagsArray
+          } as TikTokPost;
+        });
+        
+        setSearchResults(transformedData);
+      } else {
+        // If no cached data, call the edge function to fetch new data
+        console.log("Fetching fresh hashtag search data");
+        
+        const response = await supabase.functions.invoke('search-tiktok-hashtags', {
+          body: { hashtag: formattedHashtag }
+        });
+        
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to fetch hashtag data');
+        }
+        
+        const data = response.data;
+        console.log("Received API response:", data);
+        
+        if (data.videos && data.videos.length > 0) {
+          const videos = data.videos.map((video: any) => ({
+            id: video.id,
+            cover_url: video.coverUrl,
+            text: video.text,
+            tiktok_created_at: video.createTime ? new Date(video.createTime).toISOString() : null,
+            video_url: video.downloadLink,
+            share_count: video.shareCount,
+            play_count: video.playCount,
+            collect_count: video.collectCount,
+            comment_count: video.commentCount,
+            digg_count: video.diggCount,
+            hashtags: Array.isArray(video.hashtags) ? video.hashtags : []
+          })) as TikTokPost[];
+          
+          setSearchResults(videos.slice(0, postsPerPage));
+          setTotalPages(Math.ceil(videos.length / postsPerPage));
+        } else {
+          setSearchResults([]);
+          setTotalPages(1);
+        }
+      }
     } catch (error) {
       console.error("Error during hashtag search:", error);
+      toast({
+        title: "Search Error",
+        description: error instanceof Error ? error.message : "Failed to search for hashtag",
+        variant: "destructive"
+      });
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }

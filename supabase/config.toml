@@ -1,3 +1,4 @@
 
 project_id = "laqprgjsfnrsyahpwsjs"
 [functions.fetch-tiktok-data]
+[functions.search-tiktok-hashtags]

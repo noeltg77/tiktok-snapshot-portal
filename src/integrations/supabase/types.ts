@@ -48,6 +48,60 @@ export type Database = {
         }
         Relationships: []
       }
+      searches: {
+        Row: {
+          collect_count: number | null
+          comment_count: number | null
+          cover_url: string | null
+          created_at: string | null
+          digg_count: number | null
+          hashtags: Json | null
+          id: string
+          play_count: number | null
+          search_term: string
+          searched_at: string | null
+          share_count: number | null
+          text: string | null
+          tiktok_created_at: string | null
+          video_id: string
+          video_url: string | null
+        }
+        Insert: {
+          collect_count?: number | null
+          comment_count?: number | null
+          cover_url?: string | null
+          created_at?: string | null
+          digg_count?: number | null
+          hashtags?: Json | null
+          id?: string
+          play_count?: number | null
+          search_term: string
+          searched_at?: string | null
+          share_count?: number | null
+          text?: string | null
+          tiktok_created_at?: string | null
+          video_id: string
+          video_url?: string | null
+        }
+        Update: {
+          collect_count?: number | null
+          comment_count?: number | null
+          cover_url?: string | null
+          created_at?: string | null
+          digg_count?: number | null
+          hashtags?: Json | null
+          id?: string
+          play_count?: number | null
+          search_term?: string
+          searched_at?: string | null
+          share_count?: number | null
+          text?: string | null
+          tiktok_created_at?: string | null
+          video_id?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       tiktok_posts: {
         Row: {
           collect_count: number | null
