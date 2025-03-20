@@ -95,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  // Fetch profile data when user changes
+  // Fetch profile data when user changes - only once
   useEffect(() => {
     const fetchProfile = async () => {
       if (!user) {
@@ -121,8 +121,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Profile exists
           setProfile(data);
           
-          // If profile has a TikTok username, refresh the TikTok data
-          if (data.tiktok_username) {
+          // Only fetch TikTok data on initial login, not on every render
+          if (data.tiktok_username && !profile) {
+            console.log('Initial profile load - fetching TikTok data');
             const tiktokData = await fetchTikTokData(data.tiktok_username);
             
             if (tiktokData) {
@@ -225,7 +226,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut,
     loading,
     profileLoading,
-    hasTikTokUsername,
+    hasTikTokUsername: !!profile?.tiktok_username,
     refreshTikTokData,
   };
 

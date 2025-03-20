@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -8,11 +8,14 @@ import { DashboardContent } from "@/components/dashboard/DashboardContent";
 const Dashboard = () => {
   const { user, loading, profileLoading, hasTikTokUsername, refreshTikTokData } = useAuth();
   const navigate = useNavigate();
+  const dataRefreshedRef = useRef(false);
   
-  // Refresh TikTok data when dashboard loads
+  // Refresh TikTok data only once when dashboard loads
   useEffect(() => {
-    if (user && hasTikTokUsername) {
+    if (user && hasTikTokUsername && !dataRefreshedRef.current) {
+      console.log("Refreshing TikTok data on first dashboard load");
       refreshTikTokData();
+      dataRefreshedRef.current = true;
     }
   }, [user, hasTikTokUsername]);
   

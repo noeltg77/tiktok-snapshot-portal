@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
@@ -8,11 +8,14 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const ProfilePage = () => {
   const { user, profile, loading, profileLoading, refreshTikTokData } = useAuth();
+  const dataRefreshedRef = useRef(false);
 
-  // Refresh TikTok data when profile page loads
+  // Refresh TikTok data only once when profile page loads
   useEffect(() => {
-    if (user && profile?.tiktok_username) {
+    if (user && profile?.tiktok_username && !dataRefreshedRef.current) {
+      console.log("Refreshing TikTok data on first profile page load");
       refreshTikTokData();
+      dataRefreshedRef.current = true;
     }
   }, [user, profile?.tiktok_username]);
 
