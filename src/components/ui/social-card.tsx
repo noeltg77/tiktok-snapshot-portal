@@ -82,7 +82,7 @@ export function SocialCard({
     >
       <div className="divide-y divide-zinc-200 dark:divide-zinc-800">
         <div className="p-6">
-          {/* Author section */}
+          {/* Author section - Kept at the top */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
               <img
@@ -108,47 +108,8 @@ export function SocialCard({
             </button>
           </div>
 
-          {/* Content section */}
-          <p className="text-zinc-600 dark:text-zinc-300 mb-4">
-            {content?.text}
-          </p>
-
-          {/* Image with 9:16 aspect ratio */}
-          {content?.image && (
-            <div className="mb-4 rounded-xl overflow-hidden">
-              <AspectRatio ratio={9/16} className="bg-muted">
-                <img
-                  src={content.image}
-                  alt="Post content"
-                  className="w-full h-full object-cover"
-                />
-              </AspectRatio>
-            </div>
-          )}
-
-          {/* Link preview */}
-          {content?.link && (
-            <div className="mb-4 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
-              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50">
-                <div className="flex items-center gap-3 mb-2">
-                  <div className="p-2 bg-white dark:bg-zinc-700 rounded-xl">
-                    {content.link.icon}
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                      {content.link.title}
-                    </h4>
-                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                      {content.link.description}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Engagement section */}
-          <div className="flex items-center justify-between pt-2">
+          {/* Engagement section - Moved to be second */}
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-6">
               <button
                 type="button"
@@ -201,6 +162,47 @@ export function SocialCard({
               )} />
             </button>
           </div>
+
+          {/* Image section - Now third */}
+          {content?.image && (
+            <div className="mb-4 rounded-xl overflow-hidden">
+              <AspectRatio ratio={9/16} className="bg-muted">
+                <img
+                  src={content.image}
+                  alt="Post content"
+                  className="w-full h-full object-cover"
+                />
+              </AspectRatio>
+            </div>
+          )}
+
+          {/* Link preview */}
+          {content?.link && (
+            <div className="mb-4 rounded-2xl border border-zinc-200 dark:border-zinc-700 overflow-hidden">
+              <div className="p-4 bg-zinc-50 dark:bg-zinc-800/50">
+                <div className="flex items-center gap-3 mb-2">
+                  <div className="p-2 bg-white dark:bg-zinc-700 rounded-xl">
+                    {content.link.icon}
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                      {content.link.title}
+                    </h4>
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      {content.link.description}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Content text section - Now last */}
+          {content?.text && (
+            <p className="text-zinc-600 dark:text-zinc-300">
+              {content.text}
+            </p>
+          )}
         </div>
       </div>
     </div>
