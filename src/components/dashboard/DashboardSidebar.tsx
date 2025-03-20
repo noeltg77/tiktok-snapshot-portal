@@ -1,9 +1,9 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { LayoutDashboard, UserCog, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 // Sidebar context
 interface SidebarContextProps {
@@ -238,7 +238,7 @@ export const LogoIcon = () => {
 
 // The main dashboard sidebar component that uses all the components above
 export const DashboardSidebar = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const [open, setOpen] = useState(false);
   
   const links = [
@@ -300,9 +300,19 @@ export const DashboardSidebar = () => {
         </div>
         <div>
           <div className="flex items-center justify-start gap-2 py-2">
-            <div className="h-7 w-7 flex-shrink-0 rounded-full bg-gray-300 flex items-center justify-center">
-              {user?.email?.charAt(0).toUpperCase()}
-            </div>
+            <Avatar className="h-7 w-7 flex-shrink-0">
+              {profile?.avatar_url ? (
+                <AvatarImage 
+                  src={profile.avatar_url} 
+                  alt={user?.email || 'User'} 
+                  className="object-cover"
+                />
+              ) : (
+                <AvatarFallback className="bg-gray-300 text-gray-700">
+                  {user?.email?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              )}
+            </Avatar>
             <span
               className={cn(
                 "text-neutral-700 dark:text-neutral-200 text-sm transition duration-150 whitespace-pre inline-block !p-0 !m-0",
