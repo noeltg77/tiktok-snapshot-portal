@@ -113,7 +113,7 @@ export function SocialCard({
             </button>
           </div>
 
-          {/* Engagement section - Updated with views and bookmarks */}
+          {/* Engagement section - Updated to be colorful and some non-clickable */}
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-4">
               <button
@@ -137,20 +137,18 @@ export function SocialCard({
               <button
                 type="button"
                 onClick={onComment}
-                className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                className="flex items-center gap-1 text-sm text-blue-500 hover:text-blue-600 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
                 <span>{engagement?.comments}</span>
               </button>
-              <button
-                type="button"
-                onClick={onShare}
-                className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors"
-              >
+              {/* Share stat - Now non-clickable and colored */}
+              <div className="flex items-center gap-1 text-sm text-green-500">
                 <Share className="w-5 h-5" />
                 <span>{engagement?.shares}</span>
-              </button>
-              <div className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400">
+              </div>
+              {/* Views stat - Non-clickable and colored */}
+              <div className="flex items-center gap-1 text-sm text-purple-500">
                 <Eye className="w-5 h-5" />
                 <span>{engagement?.views?.toLocaleString() || 0}</span>
               </div>
