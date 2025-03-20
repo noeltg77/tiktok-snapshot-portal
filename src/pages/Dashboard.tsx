@@ -1,15 +1,23 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Dashboard = () => {
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, profileLoading, hasTikTokUsername } = useAuth();
+  const navigate = useNavigate();
+  
+  // Redirect to TikTok username form if user doesn't have a username set
+  useEffect(() => {
+    if (!loading && !profileLoading && user && !hasTikTokUsername) {
+      navigate('/tiktok-username');
+    }
+  }, [user, loading, profileLoading, hasTikTokUsername, navigate]);
 
   // If still loading, show a loading indicator
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">Loading...</p>
@@ -20,6 +28,12 @@ const Dashboard = () => {
   // If not logged in, redirect to auth page
   if (!user) {
     return <Navigate to="/auth" replace />;
+  }
+
+  // If user doesn't have a TikTok username, they'll be redirected in the useEffect
+  // This is just a fallback
+  if (!hasTikTokUsername) {
+    return null;
   }
 
   return (

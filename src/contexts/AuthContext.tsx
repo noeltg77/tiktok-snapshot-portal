@@ -4,13 +4,23 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+type Profile = {
+  id: string;
+  username: string | null;
+  tiktok_username: string | null;
+  avatar_url: string | null;
+}
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
+  profile: Profile | null;
   signIn: (email: string, password: string) => Promise<{ error: any | null }>;
   signUp: (email: string, password: string) => Promise<{ error: any | null }>;
   signOut: () => Promise<void>;
   loading: boolean;
+  profileLoading: boolean;
+  hasTikTokUsername: boolean;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,8 +28,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [profileLoading, setProfileLoading] = useState(true);
   const navigate = useNavigate();
+
+  // Fetch profile data when user changes
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (!user) {
+        setProfile(null);
+        setProfileLoading(false);
+        return;
+      }
+
+      try {
+        setProfileLoading(true);
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setProfile(null);
+        } else {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error('Error fetching profile:', error);
+        setProfile(null);
+      } finally {
+        setProfileLoading(false);
+      }
+    };
+
+    fetchProfile();
+  }, [user]);
 
   useEffect(() => {
     // Set up auth state listener FIRST
@@ -59,13 +105,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     navigate("/auth");
   };
 
+  const hasTikTokUsername = !!profile?.tiktok_username;
+
   const value = {
     session,
     user,
+    profile,
     signIn,
     signUp,
     signOut,
     loading,
+    profileLoading,
+    hasTikTokUsername,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
