@@ -1,7 +1,8 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
+import { RefreshCw } from "lucide-react";
 
 const StatCard = ({ title, value }: { title: string; value: string | number }) => {
   return (
@@ -16,13 +17,78 @@ const StatCard = ({ title, value }: { title: string; value: string | number }) =
   );
 };
 
+// Format time in MM:SS format
+const formatTime = (milliseconds: number): string => {
+  const totalSeconds = Math.ceil(milliseconds / 1000);
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+};
+
 export const DashboardContent = () => {
-  const { profile } = useAuth();
+  const { profile, refreshTikTokData, profileLoading, getCooldownRemaining } = useAuth();
+  const [cooldownTime, setCooldownTime] = useState<string | null>(null);
+  const [canRefresh, setCanRefresh] = useState(false);
+
+  useEffect(() => {
+    // Initial check
+    const remaining = getCooldownRemaining();
+    if (remaining === null || remaining === 0) {
+      setCooldownTime(null);
+      setCanRefresh(true);
+    } else {
+      setCooldownTime(formatTime(remaining));
+      setCanRefresh(false);
+    }
+
+    // Set up the timer to update every second
+    const interval = setInterval(() => {
+      const remaining = getCooldownRemaining();
+      if (remaining === null || remaining === 0) {
+        setCooldownTime(null);
+        setCanRefresh(true);
+      } else {
+        setCooldownTime(formatTime(remaining));
+        setCanRefresh(false);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [getCooldownRemaining]);
+  
+  const handleRefresh = () => {
+    if (canRefresh) {
+      refreshTikTokData();
+    }
+  };
   
   return (
     <div className="flex flex-1 flex-col">
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-6">Welcome, {profile?.tiktok_username || 'User'}</h1>
+        
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center">
+            {cooldownTime && (
+              <div className="flex items-center text-gray-600 dark:text-gray-400">
+                <span className="mr-2">Next refresh available in:</span>
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">{cooldownTime}</span>
+              </div>
+            )}
+          </div>
+          <button
+            onClick={handleRefresh}
+            disabled={!canRefresh || profileLoading}
+            className={`flex items-center space-x-1 px-3 py-1 rounded ${
+              canRefresh && !profileLoading
+                ? 'bg-blue-500 text-white hover:bg-blue-600'
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            } transition-colors`}
+          >
+            <RefreshCw size={16} className={profileLoading ? "animate-spin" : ""} />
+            <span>{profileLoading ? "Refreshing..." : "Refresh Data"}</span>
+          </button>
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard title="Followers" value={profile?.fans ?? 0} />

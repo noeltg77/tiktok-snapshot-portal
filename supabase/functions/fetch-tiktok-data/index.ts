@@ -45,10 +45,13 @@ Deno.serve(async (req) => {
       ? tiktokUsername 
       : `@${tiktokUsername}`;
     
-    // Create a simple date-based cache key
-    // Format: tiktok-data-@username-YYYY-MM-DD
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
-    const cacheKey = `tiktok-data-${formattedUsername}-${today}`;
+    // Create a more specific timestamp-based cache key
+    // Format: tiktok-data-@username-YYYY-MM-DD-HH-MM
+    const now = new Date();
+    // Round the minutes down to nearest 5-minute interval to create a 5-minute cache window
+    const minutes = Math.floor(now.getMinutes() / 5) * 5;
+    const timeString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}-${String(now.getHours()).padStart(2, '0')}-${String(minutes).padStart(2, '0')}`;
+    const cacheKey = `tiktok-data-${formattedUsername}-${timeString}`;
     
     console.log(`Making Apify API request for username: ${formattedUsername} with cache key: ${cacheKey}`);
     const response = await fetch('https://api.apify.com/v2/acts/clockworks~free-tiktok-scraper/run-sync-get-dataset-items?token=apify_api_BSZn12KdnyAsoqgb8y7Cga7epcjZop0KVMOW', {
@@ -110,7 +113,7 @@ Deno.serve(async (req) => {
           headers: { 
             ...corsHeaders, 
             'Content-Type': 'application/json',
-            'Cache-Control': 'max-age=3600' // Cache for 1 hour
+            'Cache-Control': 'max-age=300' // Cache for 5 minutes
           } 
         }
       );

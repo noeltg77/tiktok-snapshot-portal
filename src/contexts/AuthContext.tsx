@@ -26,12 +26,16 @@ type AuthContextType = {
   profileLoading: boolean;
   hasTikTokUsername: boolean;
   refreshTikTokData: () => Promise<void>;
+  getNextRefreshTime: () => Date | null;
+  getCooldownRemaining: () => number | null;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Create a key in localStorage to track the last fetch time
 const LAST_FETCH_KEY = 'tiktok_last_fetch_time';
+// 5 minutes in milliseconds
+const COOLDOWN_PERIOD = 5 * 60 * 1000;
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [session, setSession] = useState<Session | null>(null);
@@ -53,16 +57,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem(LAST_FETCH_KEY, time.toString());
   };
 
+  // Add function to get the next refresh time
+  const getNextRefreshTime = (): Date | null => {
+    const lastFetchTime = getLastFetchTime();
+    if (!lastFetchTime) return null;
+    
+    return new Date(lastFetchTime + COOLDOWN_PERIOD);
+  };
+  
+  // Add function to get remaining cooldown in milliseconds
+  const getCooldownRemaining = (): number | null => {
+    const lastFetchTime = getLastFetchTime();
+    if (!lastFetchTime) return null;
+    
+    const now = Date.now();
+    const nextRefreshTime = lastFetchTime + COOLDOWN_PERIOD;
+    
+    if (now >= nextRefreshTime) return 0;
+    return nextRefreshTime - now;
+  };
+
   const fetchTikTokData = async (username: string) => {
     try {
       const now = Date.now();
       const lastFetchTime = getLastFetchTime();
       
-      // Check if we're in the cooldown period (1 hour = 3600000 ms)
-      if (lastFetchTime && now - lastFetchTime < 3600000) {
+      // Check if we're in the cooldown period (5 minutes = 300000 ms)
+      if (lastFetchTime && now - lastFetchTime < COOLDOWN_PERIOD) {
         console.log('Skipping API call - cooldown period active');
         console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
-        console.log(`Next fetch available after: ${new Date(lastFetchTime + 3600000).toLocaleString()}`);
+        console.log(`Next fetch available after: ${new Date(lastFetchTime + COOLDOWN_PERIOD).toLocaleString()}`);
         return null;
       }
       
@@ -97,11 +121,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const now = Date.now();
       const lastFetchTime = getLastFetchTime();
       
-      // Check if we're in the cooldown period (1 hour = 3600000 ms)
-      if (lastFetchTime && now - lastFetchTime < 3600000) {
+      // Check if we're in the cooldown period (5 minutes = 300000 ms)
+      if (lastFetchTime && now - lastFetchTime < COOLDOWN_PERIOD) {
         console.log('Skipping refresh - cooldown period active');
         console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
-        console.log(`Next fetch available after: ${new Date(lastFetchTime + 3600000).toLocaleString()}`);
+        console.log(`Next fetch available after: ${new Date(lastFetchTime + COOLDOWN_PERIOD).toLocaleString()}`);
         setProfileLoading(false);
         return;
       }
@@ -246,6 +270,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     profileLoading,
     hasTikTokUsername: !!profile?.tiktok_username,
     refreshTikTokData,
+    getNextRefreshTime,
+    getCooldownRemaining,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
