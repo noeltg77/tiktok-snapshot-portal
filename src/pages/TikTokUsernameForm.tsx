@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,9 +12,23 @@ import { useToast } from "@/hooks/use-toast";
 const TikTokUsernameForm = () => {
   const [tiktokUsername, setTiktokUsername] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { user } = useAuth();
+  const { user, profile, profileLoading, hasTikTokUsername } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  // Redirect to dashboard if user already has a TikTok username
+  useEffect(() => {
+    if (!profileLoading && hasTikTokUsername) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [profileLoading, hasTikTokUsername, navigate]);
+
+  // Redirect to auth if no user
+  useEffect(() => {
+    if (!user && !profileLoading) {
+      navigate('/auth', { replace: true });
+    }
+  }, [user, profileLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,11 +50,10 @@ const TikTokUsernameForm = () => {
         description: "Your TikTok username has been saved successfully.",
       });
       
-      // Force redirect to dashboard
-      setTimeout(() => {
-        navigate('/dashboard', { replace: true });
-      }, 500);
+      // Force redirect to dashboard with replace to prevent back navigation
+      navigate('/dashboard', { replace: true });
     } catch (error: any) {
+      console.error("Error saving TikTok username:", error);
       toast({
         title: "Error",
         description: error.message || "An error occurred while saving your TikTok username.",
@@ -50,6 +63,14 @@ const TikTokUsernameForm = () => {
       setIsSubmitting(false);
     }
   };
+
+  if (profileLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
