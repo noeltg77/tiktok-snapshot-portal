@@ -9,6 +9,7 @@ import {
   Bookmark,
   MoreHorizontal,
   Link as LinkIcon,
+  Eye,
 } from "lucide-react";
 import { useState } from "react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
@@ -33,6 +34,7 @@ interface SocialCardProps {
     likes?: number;
     comments?: number;
     shares?: number;
+    views?: number;
     isLiked?: boolean;
     isBookmarked?: boolean;
   };
@@ -108,14 +110,14 @@ export function SocialCard({
             </button>
           </div>
 
-          {/* Engagement section - Moved to be second */}
+          {/* Engagement section - Updated with views */}
           <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4">
               <button
                 type="button"
                 onClick={handleLike}
                 className={cn(
-                  "flex items-center gap-2 text-sm transition-colors",
+                  "flex items-center gap-1 text-sm transition-colors",
                   isLiked
                     ? "text-rose-600"
                     : "text-zinc-500 dark:text-zinc-400 hover:text-rose-600"
@@ -132,7 +134,7 @@ export function SocialCard({
               <button
                 type="button"
                 onClick={onComment}
-                className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-500 transition-colors"
+                className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-blue-500 transition-colors"
               >
                 <MessageCircle className="w-5 h-5" />
                 <span>{engagement?.comments}</span>
@@ -140,11 +142,15 @@ export function SocialCard({
               <button
                 type="button"
                 onClick={onShare}
-                className="flex items-center gap-2 text-sm text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors"
+                className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400 hover:text-green-500 transition-colors"
               >
                 <Share2 className="w-5 h-5" />
                 <span>{engagement?.shares}</span>
               </button>
+              <div className="flex items-center gap-1 text-sm text-zinc-500 dark:text-zinc-400">
+                <Eye className="w-5 h-5" />
+                <span>{engagement?.views?.toLocaleString() || 0}</span>
+              </div>
             </div>
             <button
               type="button"
