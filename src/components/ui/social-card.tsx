@@ -1,4 +1,3 @@
-
 "use client";
 
 import { cn } from "@/lib/utils";
@@ -168,10 +167,31 @@ export function SocialCard({
                   alt="Post content"
                   className="w-full h-full object-cover transition-transform group-hover:scale-105"
                 />
-                {/* Add play indicator overlay */}
+                {/* Update play indicator to use TikTok logo */}
                 <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity">
                   <div className="w-16 h-16 rounded-full bg-white bg-opacity-80 flex items-center justify-center">
-                    <div className="w-0 h-0 border-y-8 border-y-transparent border-l-12 border-l-blue-600 ml-1"></div>
+                    <svg 
+                      xmlns="http://www.w3.org/2000/svg" 
+                      width="24" 
+                      height="24" 
+                      viewBox="0 0 24 24" 
+                      fill="none" 
+                      stroke="black" 
+                      strokeWidth="2" 
+                      strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      className="w-8 h-8"
+                    >
+                      <path d="M9 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+                      <path d="M9 8h.17"></path>
+                      <path d="M15 12a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"></path>
+                      <path d="M15 8h.17"></path>
+                      <path d="M15 14.5V17a3 3 0 0 1-5.68 1.33"></path>
+                      <path d="M9 14.5V17"></path>
+                      <path d="M9 5V3h6v2"></path>
+                      <path d="M9 12V9"></path>
+                      <path d="M15 12V9"></path>
+                    </svg>
                   </div>
                 </div>
               </AspectRatio>
