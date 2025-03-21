@@ -11,13 +11,17 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          audience_connection: string | null
           avatar_url: string | null
+          content_structure: string | null
           created_at: string
           fans: number | null
           following: number | null
           heart: number | null
           id: string
           tiktok_username: string | null
+          tone_and_language: string | null
+          topics_and_themes: string | null
           transcript: string | null
           transcription_status: string | null
           updated_at: string
@@ -25,13 +29,17 @@ export type Database = {
           video: number | null
         }
         Insert: {
+          audience_connection?: string | null
           avatar_url?: string | null
+          content_structure?: string | null
           created_at?: string
           fans?: number | null
           following?: number | null
           heart?: number | null
           id: string
           tiktok_username?: string | null
+          tone_and_language?: string | null
+          topics_and_themes?: string | null
           transcript?: string | null
           transcription_status?: string | null
           updated_at?: string
@@ -39,13 +47,17 @@ export type Database = {
           video?: number | null
         }
         Update: {
+          audience_connection?: string | null
           avatar_url?: string | null
+          content_structure?: string | null
           created_at?: string
           fans?: number | null
           following?: number | null
           heart?: number | null
           id?: string
           tiktok_username?: string | null
+          tone_and_language?: string | null
+          topics_and_themes?: string | null
           transcript?: string | null
           transcription_status?: string | null
           updated_at?: string

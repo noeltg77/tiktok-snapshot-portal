@@ -11,6 +11,7 @@ import Dashboard from "./pages/Dashboard";
 import HashtagsPage from "./pages/HashtagsPage";
 import SettingsPage from "./pages/SettingsPage";
 import TikTokUsernameForm from "./pages/TikTokUsernameForm";
+import BrandVoicePage from "./pages/BrandVoicePage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -27,6 +28,7 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/hashtags" element={<HashtagsPage />} />
+            <Route path="/brand-voice" element={<BrandVoicePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/tiktok-username" element={<TikTokUsernameForm />} />
             <Route path="*" element={<NotFound />} />
