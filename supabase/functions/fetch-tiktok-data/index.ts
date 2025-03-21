@@ -1,4 +1,3 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.1';
 
 const corsHeaders = {
@@ -121,13 +120,14 @@ Deno.serve(async (req) => {
           videoUrl = item.videoUrl;
         }
         
-        // Get the direct download URL from videoMeta.downloadAddr
+        // Get the direct download URL from videoMeta.downloadAddr or mediaUrls
         let downloadUrl = null;
         if (item.videoMeta && item.videoMeta.downloadAddr) {
           downloadUrl = item.videoMeta.downloadAddr;
           console.log(`Found downloadAddr for video ${item.id}: ${downloadUrl}`);
         } else if (item.mediaUrls && item.mediaUrls.length > 0) {
           downloadUrl = item.mediaUrls[0];
+          console.log(`Found mediaUrl for video ${item.id}: ${downloadUrl}`);
         }
 
         return {
@@ -142,7 +142,8 @@ Deno.serve(async (req) => {
           coverUrl: coverUrl,
           downloadLink: videoUrl,
           downloadUrl: downloadUrl,
-          hashtags: hashtags
+          hashtags: hashtags,
+          videoMeta: item.videoMeta // Include the full videoMeta for complete information
         };
       });
       

@@ -85,30 +85,26 @@ const TikTokPosts = () => {
   
   const processTikTokVideos = async (videos) => {
     try {
+      // Fetch existing posts to determine which need to be inserted vs updated
       const { data: existingPosts } = await supabase
         .from('tiktok_posts')
-        .select('id')
+        .select('id, download_url')
         .eq('user_id', profile.id);
       
-      const existingIds = existingPosts ? existingPosts.map(post => post.id) : [];
-      
-      const newVideos = videos.filter(video => !existingIds.includes(video.id));
-      
-      if (newVideos.length === 0) {
-        console.log('No new videos to insert');
-        
-        const { data } = await supabase
-          .from('tiktok_posts')
-          .select('*')
-          .eq('user_id', profile.id)
-          .order('tiktok_created_at', { ascending: false });
-        
-        return data || [];
+      // Create a map of existing post IDs for quick lookup
+      const existingPostsMap = {};
+      if (existingPosts) {
+        existingPosts.forEach(post => {
+          existingPostsMap[post.id] = post;
+        });
       }
       
-      console.log(`Found ${newVideos.length} new videos to insert`);
+      // Separate videos into new and existing
+      const newVideos = [];
+      const videosToUpdate = [];
       
-      const postsToInsert = newVideos.map(video => {
+      videos.forEach(video => {
+        // Prepare hashtags
         let hashtagsJson = '[]';
         if (Array.isArray(video.hashtags)) {
           try {
@@ -118,40 +114,101 @@ const TikTokPosts = () => {
           }
         }
         
-        // Ensure downloadUrl is captured correctly
-        const downloadUrl = video.downloadUrl || null;
+        // Extract download URL
+        const downloadUrl = video.downloadUrl || 
+                           (video.videoMeta && video.videoMeta.downloadAddr) || 
+                           null;
+        
         if (downloadUrl) {
           console.log(`Processing video ${video.id} with downloadUrl: ${downloadUrl}`);
         } else {
           console.warn(`No downloadUrl found for video ${video.id}`);
         }
         
-        return {
-          id: video.id,
-          user_id: profile.id,
-          profile_id: profile.id,
-          text: video.text,
-          digg_count: video.diggCount,
-          share_count: video.shareCount,
-          play_count: video.playCount,
-          collect_count: video.collectCount || 0,
-          comment_count: video.commentCount,
-          cover_url: video.coverUrl,
-          video_url: video.videoUrl || video.downloadLink,
-          download_url: downloadUrl, // Ensure this is saved
-          hashtags: hashtagsJson,
-          transcription_status: 'New',
-          transcript: null,
-          tiktok_created_at: new Date(video.createTime * 1000).toISOString()
-        };
+        // Check if this video already exists in our database
+        if (existingPostsMap[video.id]) {
+          // Only update if the download_url is missing or different
+          const existingPost = existingPostsMap[video.id];
+          if (!existingPost.download_url || existingPost.download_url !== downloadUrl) {
+            videosToUpdate.push({
+              id: video.id,
+              download_url: downloadUrl,
+              digg_count: video.diggCount,
+              share_count: video.shareCount,
+              play_count: video.playCount,
+              collect_count: video.collectCount || 0,
+              comment_count: video.commentCount,
+              // We update engagement metrics alongside the download URL
+            });
+          }
+        } else {
+          // New video to insert
+          newVideos.push({
+            id: video.id,
+            user_id: profile.id,
+            profile_id: profile.id,
+            text: video.text,
+            digg_count: video.diggCount,
+            share_count: video.shareCount,
+            play_count: video.playCount,
+            collect_count: video.collectCount || 0,
+            comment_count: video.commentCount,
+            cover_url: video.coverUrl,
+            video_url: video.videoUrl || video.downloadLink,
+            download_url: downloadUrl,
+            hashtags: hashtagsJson,
+            transcription_status: 'New',
+            transcript: null,
+            tiktok_created_at: new Date(video.createTime * 1000).toISOString()
+          });
+        }
       });
       
-      const { error } = await supabase
-        .from('tiktok_posts')
-        .insert(postsToInsert);
+      // Handle new videos
+      if (newVideos.length > 0) {
+        console.log(`Inserting ${newVideos.length} new TikTok videos`);
+        const { error: insertError } = await supabase
+          .from('tiktok_posts')
+          .insert(newVideos);
+        
+        if (insertError) {
+          console.error('Error inserting new videos:', insertError);
+          throw insertError;
+        }
+        
+        toast.success(`Added ${newVideos.length} new TikTok posts`);
+      }
       
-      if (error) throw error;
+      // Update existing videos with new download URLs
+      if (videosToUpdate.length > 0) {
+        console.log(`Updating ${videosToUpdate.length} existing TikTok videos with download URLs`);
+        
+        // Update each video one by one to ensure success
+        for (const video of videosToUpdate) {
+          const { error: updateError } = await supabase
+            .from('tiktok_posts')
+            .update({
+              download_url: video.download_url,
+              digg_count: video.digg_count,
+              share_count: video.share_count,
+              play_count: video.play_count,
+              collect_count: video.collect_count,
+              comment_count: video.comment_count
+            })
+            .eq('id', video.id)
+            .eq('user_id', profile.id);
+            
+          if (updateError) {
+            console.error(`Error updating video ${video.id}:`, updateError);
+          } else {
+            console.log(`Successfully updated download URL for video ${video.id}`);
+          }
+        }
+        
+        toast.success(`Updated ${videosToUpdate.length} existing TikTok posts`);
+      }
       
+      // Fetch the updated posts to return
       const { data } = await supabase
         .from('tiktok_posts')
         .select('*')
