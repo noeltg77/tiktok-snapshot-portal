@@ -56,6 +56,8 @@ export type Database = {
       }
       searches: {
         Row: {
+          author_avatar_url: string | null
+          author_name: string | null
           collect_count: number | null
           comment_count: number | null
           cover_url: string | null
@@ -63,6 +65,7 @@ export type Database = {
           digg_count: number | null
           hashtags: Json | null
           id: string
+          original_post_date: string | null
           play_count: number | null
           search_term: string
           searched_at: string | null
@@ -75,6 +78,8 @@ export type Database = {
           video_url: string | null
         }
         Insert: {
+          author_avatar_url?: string | null
+          author_name?: string | null
           collect_count?: number | null
           comment_count?: number | null
           cover_url?: string | null
@@ -82,6 +87,7 @@ export type Database = {
           digg_count?: number | null
           hashtags?: Json | null
           id?: string
+          original_post_date?: string | null
           play_count?: number | null
           search_term: string
           searched_at?: string | null
@@ -94,6 +100,8 @@ export type Database = {
           video_url?: string | null
         }
         Update: {
+          author_avatar_url?: string | null
+          author_name?: string | null
           collect_count?: number | null
           comment_count?: number | null
           cover_url?: string | null
@@ -101,6 +109,7 @@ export type Database = {
           digg_count?: number | null
           hashtags?: Json | null
           id?: string
+          original_post_date?: string | null
           play_count?: number | null
           search_term?: string
           searched_at?: string | null

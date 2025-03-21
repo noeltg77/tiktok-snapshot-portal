@@ -55,7 +55,7 @@ export const HashtagSearchHistory = ({ onSelectSearchTerm }: HashtagSearchHistor
         <Button 
           variant="outline" 
           size="icon"
-          className="ml-2 relative"
+          className="ml-2 relative bg-gray-100 hover:bg-gray-200 dark:bg-gray-800 dark:hover:bg-gray-700"
           title="Search History"
         >
           <Clock className="h-5 w-5 text-primary" />

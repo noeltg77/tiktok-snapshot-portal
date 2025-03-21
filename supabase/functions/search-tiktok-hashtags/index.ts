@@ -106,10 +106,16 @@ Deno.serve(async (req) => {
         videoUrl = item.videoUrl;
       }
 
+      // Extract author information
+      const authorName = item.authorMeta?.name || '';
+      const authorAvatarUrl = item.authorMeta?.originalAvatarUrl || item.authorMeta?.avatar || '';
+      const createTimeISO = item.createTimeISO || (item.createTime ? new Date(item.createTime * 1000).toISOString() : null);
+
       return {
         id: item.id,
         text: item.text || '',
         createTime: item.createTime,
+        createTimeISO: createTimeISO,
         diggCount: item.diggCount,
         shareCount: item.shareCount,
         playCount: item.playCount,
@@ -117,7 +123,9 @@ Deno.serve(async (req) => {
         collectCount: item.collectCount || 0,
         coverUrl: coverUrl,
         downloadLink: videoUrl,
-        hashtags: hashtags
+        hashtags: hashtags,
+        authorName: authorName,
+        authorAvatarUrl: authorAvatarUrl
       };
     });
     
@@ -144,14 +152,17 @@ Deno.serve(async (req) => {
               video_id: video.id,
               cover_url: video.coverUrl,
               text: video.text,
-              tiktok_created_at: new Date(video.createTime).toISOString(),
+              tiktok_created_at: new Date(video.createTime * 1000).toISOString(),
               video_url: video.downloadLink,
               share_count: video.shareCount,
               play_count: video.playCount,
               collect_count: video.collectCount,
               comment_count: video.commentCount,
               digg_count: video.diggCount,
-              hashtags: JSON.stringify(video.hashtags)
+              hashtags: JSON.stringify(video.hashtags),
+              author_name: video.authorName,
+              author_avatar_url: video.authorAvatarUrl,
+              original_post_date: video.createTimeISO
             }, {
               onConflict: 'search_term,video_id'
             });

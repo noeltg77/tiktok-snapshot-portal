@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -24,6 +25,9 @@ interface TikTokPost {
   digg_count?: number;
   hashtags?: string[];
   transcript?: string;
+  author_name?: string;
+  author_avatar_url?: string;
+  original_post_date?: string;
 }
 
 const HashtagsPage = () => {
@@ -109,7 +113,10 @@ const HashtagsPage = () => {
             comment_count: post.comment_count,
             digg_count: post.digg_count,
             hashtags: hashtagsArray,
-            transcript: post.transcript
+            transcript: post.transcript,
+            author_name: post.author_name,
+            author_avatar_url: post.author_avatar_url,
+            original_post_date: post.original_post_date
           } as TikTokPost;
         });
         
@@ -133,14 +140,17 @@ const HashtagsPage = () => {
             id: video.id,
             cover_url: video.coverUrl,
             text: video.text,
-            tiktok_created_at: video.createTime ? new Date(video.createTime).toISOString() : null,
+            tiktok_created_at: video.createTime ? new Date(video.createTime * 1000).toISOString() : null,
             video_url: video.downloadLink,
             share_count: video.shareCount,
             play_count: video.playCount,
             collect_count: video.collectCount,
             comment_count: video.commentCount,
             digg_count: video.diggCount,
-            hashtags: Array.isArray(video.hashtags) ? video.hashtags : []
+            hashtags: Array.isArray(video.hashtags) ? video.hashtags : [],
+            author_name: video.authorName,
+            author_avatar_url: video.authorAvatarUrl,
+            original_post_date: video.createTimeISO
           })) as TikTokPost[];
           
           setSearchResults(videos.slice(0, postsPerPage));
@@ -220,7 +230,10 @@ const HashtagsPage = () => {
           comment_count: post.comment_count,
           digg_count: post.digg_count,
           hashtags: hashtagsArray,
-          transcript: post.transcript
+          transcript: post.transcript,
+          author_name: post.author_name,
+          author_avatar_url: post.author_avatar_url,
+          original_post_date: post.original_post_date
         } as TikTokPost;
       });
       
@@ -300,9 +313,10 @@ const HashtagsPage = () => {
                   <SocialCard
                     key={post.id}
                     author={{
-                      name: "TikTok Creator",
-                      username: "tiktok_creator",
-                      timeAgo: formatTimestamp(post.tiktok_created_at),
+                      name: post.author_name || "TikTok Creator",
+                      username: post.author_name?.toLowerCase().replace(/\s+/g, '.') || "tiktok_creator",
+                      avatar: post.author_avatar_url,
+                      timeAgo: formatTimestamp(post.original_post_date || post.tiktok_created_at),
                     }}
                     content={{
                       text: post.text,
