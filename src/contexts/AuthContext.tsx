@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -17,6 +18,7 @@ type Profile = {
   tone_and_language: string | null;
   content_structure: string | null;
   audience_connection: string | null;
+  download_url: string | null;
 }
 
 type AuthContextType = {
@@ -220,7 +222,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           following: tiktokData.following,
           fans: tiktokData.fans,
           heart: tiktokData.heart,
-          video: tiktokData.video
+          video: tiktokData.video,
+          download_url: tiktokData.downloadUrl || null // Save download URL
         };
         
         const { error } = await supabase

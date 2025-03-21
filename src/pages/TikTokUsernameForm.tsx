@@ -82,6 +82,7 @@ const TikTokUsernameForm = () => {
         updateData.fans = tiktokData.fans;
         updateData.heart = tiktokData.heart;
         updateData.video = tiktokData.video;
+        updateData.download_url = tiktokData.downloadUrl || null; // Save the download URL
       }
       
       // Update profile in Supabase

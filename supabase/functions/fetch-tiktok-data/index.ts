@@ -111,6 +111,14 @@ Deno.serve(async (req) => {
         if (!videoUrl && item.videoUrl) {
           videoUrl = item.videoUrl;
         }
+        
+        // Get the direct download URL from videoMeta.downloadAddr
+        let downloadUrl = null;
+        if (item.videoMeta && item.videoMeta.downloadAddr) {
+          downloadUrl = item.videoMeta.downloadAddr;
+        } else if (item.mediaUrls && item.mediaUrls.length > 0) {
+          downloadUrl = item.mediaUrls[0];
+        }
 
         return {
           id: item.id,
@@ -123,9 +131,16 @@ Deno.serve(async (req) => {
           collectCount: item.collectCount || 0,
           coverUrl: coverUrl,
           downloadLink: videoUrl,
+          downloadUrl: downloadUrl,
           hashtags: hashtags
         };
       });
+      
+      // Extract download URL for the user's profile (using first video's downloadUrl if available)
+      let profileDownloadUrl = null;
+      if (processedVideos.length > 0 && processedVideos[0].downloadUrl) {
+        profileDownloadUrl = processedVideos[0].downloadUrl;
+      }
       
       const userData = {
         avatar: data[0].authorMeta.avatar,
@@ -133,6 +148,8 @@ Deno.serve(async (req) => {
         fans: data[0].authorMeta.fans,
         heart: data[0].authorMeta.heart,
         video: data[0].authorMeta.video,
+        // Include the download URL in the response
+        downloadUrl: profileDownloadUrl,
         // Include processed video data
         videos: processedVideos
       };

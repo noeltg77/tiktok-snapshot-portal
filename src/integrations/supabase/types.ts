@@ -15,6 +15,7 @@ export type Database = {
           avatar_url: string | null
           content_structure: string | null
           created_at: string
+          download_url: string | null
           fans: number | null
           following: number | null
           heart: number | null
@@ -33,6 +34,7 @@ export type Database = {
           avatar_url?: string | null
           content_structure?: string | null
           created_at?: string
+          download_url?: string | null
           fans?: number | null
           following?: number | null
           heart?: number | null
@@ -51,6 +53,7 @@ export type Database = {
           avatar_url?: string | null
           content_structure?: string | null
           created_at?: string
+          download_url?: string | null
           fans?: number | null
           following?: number | null
           heart?: number | null
