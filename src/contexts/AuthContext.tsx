@@ -158,6 +158,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           }
         }
         
+        const downloadUrl = video.downloadUrl || null;
+        if (downloadUrl) {
+          console.log(`Processing video ${video.id} with downloadUrl: ${downloadUrl}`);
+        } else {
+          console.warn(`No downloadUrl found for video ${video.id}`);
+        }
+        
         return {
           id: video.id,
           user_id: userId,
@@ -170,9 +177,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           comment_count: video.commentCount,
           cover_url: video.coverUrl,
           video_url: video.downloadLink,
-          download_url: video.downloadUrl, // Store the download URL
+          download_url: downloadUrl,
           hashtags: hashtagsJson,
-          tiktok_created_at: new Date(video.createTime).toISOString()
+          tiktok_created_at: new Date(video.createTime * 1000).toISOString()
         };
       });
       

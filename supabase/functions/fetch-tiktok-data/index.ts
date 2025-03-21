@@ -125,6 +125,7 @@ Deno.serve(async (req) => {
         let downloadUrl = null;
         if (item.videoMeta && item.videoMeta.downloadAddr) {
           downloadUrl = item.videoMeta.downloadAddr;
+          console.log(`Found downloadAddr for video ${item.id}: ${downloadUrl}`);
         } else if (item.mediaUrls && item.mediaUrls.length > 0) {
           downloadUrl = item.mediaUrls[0];
         }

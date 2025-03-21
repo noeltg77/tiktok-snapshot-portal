@@ -118,6 +118,14 @@ const TikTokPosts = () => {
           }
         }
         
+        // Ensure downloadUrl is captured correctly
+        const downloadUrl = video.downloadUrl || null;
+        if (downloadUrl) {
+          console.log(`Processing video ${video.id} with downloadUrl: ${downloadUrl}`);
+        } else {
+          console.warn(`No downloadUrl found for video ${video.id}`);
+        }
+        
         return {
           id: video.id,
           user_id: profile.id,
@@ -130,7 +138,7 @@ const TikTokPosts = () => {
           comment_count: video.commentCount,
           cover_url: video.coverUrl,
           video_url: video.videoUrl || video.downloadLink,
-          download_url: video.downloadUrl, // Save the direct download URL
+          download_url: downloadUrl, // Ensure this is saved
           hashtags: hashtagsJson,
           transcription_status: 'New',
           transcript: null,
