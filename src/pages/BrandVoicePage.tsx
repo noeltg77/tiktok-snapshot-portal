@@ -81,23 +81,34 @@ const BrandVoicePage = () => {
   // Editing states for each section
   const [editingSection, setEditingSection] = useState<string | null>(null);
   
-  // Content for each section
+  // Content states to display in the UI
+  const [displayContent, setDisplayContent] = useState({
+    topics_and_themes: "",
+    tone_and_language: "",
+    content_structure: "",
+    audience_connection: ""
+  });
+  
+  // Content for each section being edited
   const [editedContent, setEditedContent] = useState({
-    topics_and_themes: profile?.topics_and_themes || "Not Generated",
-    tone_and_language: profile?.tone_and_language || "Not Generated",
-    content_structure: profile?.content_structure || "Not Generated",
-    audience_connection: profile?.audience_connection || "Not Generated"
+    topics_and_themes: "",
+    tone_and_language: "",
+    content_structure: "",
+    audience_connection: ""
   });
 
   // Update content when profile changes
   useEffect(() => {
     if (profile) {
-      setEditedContent({
+      const content = {
         topics_and_themes: profile.topics_and_themes || "Not Generated",
         tone_and_language: profile.tone_and_language || "Not Generated",
         content_structure: profile.content_structure || "Not Generated",
         audience_connection: profile.audience_connection || "Not Generated"
-      });
+      };
+      
+      setDisplayContent(content);
+      setEditedContent(content);
     }
   }, [profile]);
 
@@ -115,6 +126,11 @@ const BrandVoicePage = () => {
 
   const handleEdit = (section: string) => {
     setEditingSection(section);
+    // Initialize edited content with current display content
+    setEditedContent(prev => ({
+      ...prev,
+      [section]: displayContent[section as keyof typeof displayContent]
+    }));
   };
 
   const handleContentChange = (section: string, content: string) => {
@@ -135,6 +151,12 @@ const BrandVoicePage = () => {
         .eq('id', user.id);
         
       if (error) throw error;
+      
+      // Update the display content to show the edited changes
+      setDisplayContent(prev => ({
+        ...prev,
+        [section]: editedContent[section as keyof typeof editedContent]
+      }));
       
       setEditingSection(null);
       toast.success("Brand voice section updated successfully");
@@ -182,7 +204,7 @@ const BrandVoicePage = () => {
             {/* Topics and Themes Card */}
             <BrandVoiceCard
               title="Topics and Themes"
-              content={profile?.topics_and_themes || "Not Generated"}
+              content={displayContent.topics_and_themes}
               isEditing={editingSection === "topics_and_themes"}
               editedContent={editedContent.topics_and_themes}
               fieldName="topics_and_themes"
@@ -194,7 +216,7 @@ const BrandVoicePage = () => {
             {/* Tone and Language Card */}
             <BrandVoiceCard
               title="Tone and Language"
-              content={profile?.tone_and_language || "Not Generated"}
+              content={displayContent.tone_and_language}
               isEditing={editingSection === "tone_and_language"}
               editedContent={editedContent.tone_and_language}
               fieldName="tone_and_language"
@@ -206,7 +228,7 @@ const BrandVoicePage = () => {
             {/* Content Structure Card */}
             <BrandVoiceCard
               title="Content Structure"
-              content={profile?.content_structure || "Not Generated"}
+              content={displayContent.content_structure}
               isEditing={editingSection === "content_structure"}
               editedContent={editedContent.content_structure}
               fieldName="content_structure"
@@ -218,7 +240,7 @@ const BrandVoicePage = () => {
             {/* Audience Connection Card */}
             <BrandVoiceCard
               title="Audience Connection"
-              content={profile?.audience_connection || "Not Generated"}
+              content={displayContent.audience_connection}
               isEditing={editingSection === "audience_connection"}
               editedContent={editedContent.audience_connection}
               fieldName="audience_connection"
