@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -11,6 +10,13 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { HashtagSearchHistory } from "@/components/HashtagSearchHistory";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface TikTokPost {
   id: string;
@@ -39,7 +45,8 @@ const HashtagsPage = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const postsPerPage = 6;
+  const [resultsPerPage, setResultsPerPage] = useState(6);
+  const [maxResults, setMaxResults] = useState(21);
 
   if (loading) {
     return (
@@ -69,9 +76,9 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', formattedHashtag)
-        .eq('user_id', user.id) // Filter by current user
+        .eq('user_id', user.id)
         .order('play_count', { ascending: false })
-        .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1);
+        .range((currentPage - 1) * resultsPerPage, currentPage * resultsPerPage - 1);
       
       if (!cachedError && cachedData && cachedData.length > 0) {
         console.log("Using cached hashtag search data");
@@ -80,10 +87,10 @@ const HashtagsPage = () => {
           .from('searches')
           .select('*', { count: 'exact', head: true })
           .eq('search_term', formattedHashtag)
-          .eq('user_id', user.id); // Count only user's results
+          .eq('user_id', user.id);
         
         if (!countError && count !== null) {
-          setTotalPages(Math.ceil(count / postsPerPage));
+          setTotalPages(Math.ceil(count / resultsPerPage));
         }
         
         const transformedData = cachedData.map(post => {
@@ -131,7 +138,8 @@ const HashtagsPage = () => {
         const response = await supabase.functions.invoke('search-tiktok-hashtags', {
           body: { 
             hashtag: formattedHashtag,
-            userId: user.id // Pass user ID to the edge function
+            userId: user.id,
+            resultsPerPage: maxResults
           }
         });
         
@@ -161,8 +169,8 @@ const HashtagsPage = () => {
             original_post_date: video.createTimeISO
           })) as TikTokPost[];
           
-          setSearchResults(videos.slice(0, postsPerPage));
-          setTotalPages(Math.ceil(videos.length / postsPerPage));
+          setSearchResults(videos.slice(0, resultsPerPage));
+          setTotalPages(Math.ceil(videos.length / resultsPerPage));
         } else {
           setSearchResults([]);
           setTotalPages(1);
@@ -192,9 +200,9 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', term)
-        .eq('user_id', user.id) // Filter by current user
+        .eq('user_id', user.id)
         .order('play_count', { ascending: false })
-        .range(0, postsPerPage - 1);
+        .range(0, resultsPerPage - 1);
       
       if (cachedError) {
         throw cachedError;
@@ -204,10 +212,10 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*', { count: 'exact', head: true })
         .eq('search_term', term)
-        .eq('user_id', user.id); // Count only user's results
+        .eq('user_id', user.id);
       
       if (!countError && count !== null) {
-        setTotalPages(Math.ceil(count / postsPerPage));
+        setTotalPages(Math.ceil(count / resultsPerPage));
       }
       
       const transformedData = cachedData.map(post => {
@@ -272,7 +280,6 @@ const HashtagsPage = () => {
       return;
     }
     
-    // Create a download link
     const a = document.createElement('a');
     a.href = downloadUrl;
     a.download = `tiktok-${videoId}.mp4`;
@@ -323,17 +330,33 @@ const HashtagsPage = () => {
           </div>
           
           <div className="mb-6">
-            <form onSubmit={handleSearch} className="flex gap-2">
+            <form onSubmit={handleSearch} className="flex flex-col gap-4 sm:flex-row sm:gap-2">
               <Input
                 placeholder="Search for hashtag (without #)"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="flex-1"
               />
-              <Button type="submit" disabled={isSearching}>
-                {isSearching ? "Searching..." : "Search"}
-                <Search className="ml-2 h-4 w-4" />
-              </Button>
+              <div className="flex gap-2">
+                <Select
+                  value={maxResults.toString()}
+                  onValueChange={(value) => setMaxResults(parseInt(value))}
+                >
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Max results" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5 results</SelectItem>
+                    <SelectItem value="10">10 results</SelectItem>
+                    <SelectItem value="15">15 results</SelectItem>
+                    <SelectItem value="21">21 results</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button type="submit" disabled={isSearching}>
+                  {isSearching ? "Searching..." : "Search"}
+                  <Search className="ml-2 h-4 w-4" />
+                </Button>
+              </div>
               <HashtagSearchHistory onSelectSearchTerm={handleSearchHistorySelect} />
               <div className="ml-2 text-xs text-gray-500 hidden sm:flex items-center">
                 <span className="hidden sm:inline">← Search History</span>
@@ -433,3 +456,4 @@ const HashtagsPage = () => {
 };
 
 export default HashtagsPage;
+

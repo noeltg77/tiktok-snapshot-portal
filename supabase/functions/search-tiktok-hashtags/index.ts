@@ -16,10 +16,12 @@ Deno.serve(async (req) => {
     // Parse the request body
     let hashtag;
     let userId;
+    let resultsPerPage = 21; // Default value
     try {
       const body = await req.json();
       hashtag = body.hashtag;
       userId = body.userId; // Get the userId from the request
+      resultsPerPage = body.resultsPerPage || 21; // Get the resultsPerPage from the request (default to 21)
       
       console.log('Received hashtag search request with body:', JSON.stringify(body));
     } catch (error) {
@@ -40,7 +42,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    console.log(`Searching TikTok for hashtag: ${hashtag}`);
+    // Validate resultsPerPage
+    if (isNaN(resultsPerPage) || resultsPerPage < 1 || resultsPerPage > 21) {
+      resultsPerPage = 21; // Fallback to default if invalid
+    }
+
+    console.log(`Searching TikTok for hashtag: ${hashtag} with resultsPerPage: ${resultsPerPage}`);
     
     // Format hashtag to ensure it doesn't have # prefix
     const formattedHashtag = hashtag.startsWith('#') ? hashtag.substring(1) : hashtag;
@@ -61,7 +68,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         excludePinnedPosts: false,
         hashtags: [formattedHashtag],
-        resultsPerPage: 21,
+        resultsPerPage: resultsPerPage, // Use the dynamic resultsPerPage value
         shouldDownloadCovers: false,
         shouldDownloadSlideshowImages: false,
         shouldDownloadSubtitles: false,
@@ -196,7 +203,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         hashtag: formattedHashtag,
         videos: processedVideos,
-        count: processedVideos.length
+        count: processedVideos.length,
+        resultsPerPage: resultsPerPage
       }),
       { 
         headers: { 
