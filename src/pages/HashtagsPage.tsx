@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { SocialCard } from "@/components/ui/social-card";
+import { HashtagSocialCard } from "@/components/ui/hashtag-social-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, CloudOff } from "lucide-react";
@@ -369,7 +369,7 @@ const HashtagsPage = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {searchResults.map((post) => (
                   <div key={post.id} className="relative">
-                    <SocialCard
+                    <HashtagSocialCard
                       key={post.id}
                       author={{
                         name: post.author_name || "TikTok Creator",
@@ -445,4 +445,3 @@ const HashtagsPage = () => {
 };
 
 export default HashtagsPage;
-

@@ -1,18 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { SocialCard } from "@/components/ui/social-card";
-import { Link as LinkIcon, CloudOff, CloudDownload, Hash, FileText } from "lucide-react";
+import { DashboardSocialCard } from "@/components/ui/dashboard-social-card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
+import { CloudOff, CloudDownload } from "lucide-react";
 
 const TikTokPosts = () => {
   const { profile, isDataFetchingEnabled } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   
-  // Fetch posts on component mount
   useEffect(() => {
     if (profile?.id) {
       fetchPosts();
@@ -23,7 +20,6 @@ const TikTokPosts = () => {
     try {
       setLoading(true);
       
-      // Fetch posts from the database
       const { data, error } = await supabase
         .from('tiktok_posts')
         .select('*')
@@ -32,12 +28,10 @@ const TikTokPosts = () => {
       
       if (error) throw error;
       
-      // If we have data, set it in state
       if (data && data.length > 0) {
         setPosts(data);
         setLoading(false);
       } else {
-        // If no posts in the database, fetch from TikTok API
         if (isDataFetchingEnabled) {
           await refreshTikTokPosts();
         } else {
@@ -61,7 +55,6 @@ const TikTokPosts = () => {
     try {
       setLoading(true);
       
-      // Fetch TikTok data from API
       const response = await supabase.functions.invoke('fetch-tiktok-data', {
         body: { tiktokUsername: profile.tiktok_username }
       });
@@ -78,7 +71,6 @@ const TikTokPosts = () => {
         return;
       }
       
-      // Process and save videos to the database
       const savedPosts = await processTikTokVideos(tikTokData.videos);
       setPosts(savedPosts);
       
@@ -92,7 +84,6 @@ const TikTokPosts = () => {
   
   const processTikTokVideos = async (videos) => {
     try {
-      // Get existing post IDs to check for duplicates
       const { data: existingPosts } = await supabase
         .from('tiktok_posts')
         .select('id')
@@ -100,13 +91,11 @@ const TikTokPosts = () => {
       
       const existingIds = existingPosts ? existingPosts.map(post => post.id) : [];
       
-      // Filter out videos that are already in the database
       const newVideos = videos.filter(video => !existingIds.includes(video.id));
       
       if (newVideos.length === 0) {
         console.log('No new videos to insert');
         
-        // Return all posts from the database
         const { data } = await supabase
           .from('tiktok_posts')
           .select('*')
@@ -118,9 +107,7 @@ const TikTokPosts = () => {
       
       console.log(`Found ${newVideos.length} new videos to insert`);
       
-      // Prepare video data for database insertion
       const postsToInsert = newVideos.map(video => {
-        // Ensure hashtags is serialized properly as a JSON string if it's an array
         let hashtagsJson = '[]';
         if (Array.isArray(video.hashtags)) {
           try {
@@ -149,14 +136,12 @@ const TikTokPosts = () => {
         };
       });
       
-      // Insert new videos into the database
       const { error } = await supabase
         .from('tiktok_posts')
         .insert(postsToInsert);
       
       if (error) throw error;
       
-      // Fetch all posts again to get the newly inserted ones
       const { data } = await supabase
         .from('tiktok_posts')
         .select('*')
@@ -173,7 +158,6 @@ const TikTokPosts = () => {
   
   const handleAction = (id, action) => {
     console.log(`Post ${id}: ${action}`);
-    // Future functionality can be added here
   };
 
   if (loading) {
@@ -218,7 +202,6 @@ const TikTokPosts = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {posts.map(post => {
-            // Safely parse hashtags from JSON string
             let hashtagsArray = [];
             try {
               if (typeof post.hashtags === 'string') {
@@ -227,7 +210,6 @@ const TikTokPosts = () => {
                 hashtagsArray = post.hashtags;
               }
               
-              // Ensure hashtags is always an array of strings
               hashtagsArray = hashtagsArray.filter(tag => typeof tag === 'string');
             } catch (e) {
               console.error('Error parsing hashtags:', e);
@@ -236,7 +218,7 @@ const TikTokPosts = () => {
             
             return (
               <div key={post.id}>
-                <SocialCard
+                <DashboardSocialCard
                   author={{
                     name: profile?.tiktok_username || "User",
                     username: profile?.tiktok_username?.replace('@', '') || "user",
@@ -259,7 +241,6 @@ const TikTokPosts = () => {
                     isBookmarked: false,
                   }}
                   onComment={() => handleAction(post.id, 'commented')}
-                  context="dashboard" // Explicitly set the context to dashboard
                 />
               </div>
             );
