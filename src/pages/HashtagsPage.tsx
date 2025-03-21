@@ -5,7 +5,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SocialCard } from "@/components/ui/social-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, CloudOff, Download } from "lucide-react";
+import { Search, CloudOff } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -391,17 +391,6 @@ const HashtagsPage = () => {
                         bookmarks: post.collect_count,
                       }}
                     />
-                    {post.download_url && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="absolute bottom-4 right-4 bg-white/80 dark:bg-black/80 hover:bg-white dark:hover:bg-black"
-                        onClick={() => handleDownloadVideo(post.download_url, post.id)}
-                      >
-                        <Download className="h-4 w-4 mr-1" />
-                        Download
-                      </Button>
-                    )}
                   </div>
                 ))}
               </div>
