@@ -4,6 +4,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface HashtagSearchHistoryProps {
   onSelectSearchTerm: (term: string) => void;
@@ -13,21 +14,25 @@ export const HashtagSearchHistory = ({ onSelectSearchTerm }: HashtagSearchHistor
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
+  const { user } = useAuth(); // Get the current user
 
   useEffect(() => {
     // Load search history when the component mounts or when the sheet is opened
-    if (open) {
+    if (open && user) {
       fetchSearchHistory();
     }
-  }, [open]);
+  }, [open, user]);
 
   const fetchSearchHistory = async () => {
+    if (!user) return; // Don't fetch if no user
+
     setLoading(true);
     try {
-      // Get unique search terms from the searches table
+      // Get unique search terms from the searches table for the current user
       const { data, error } = await supabase
         .from('searches')
         .select('search_term')
+        .eq('user_id', user.id) // Filter by user ID
         .order('searched_at', { ascending: false });
 
       if (error) {

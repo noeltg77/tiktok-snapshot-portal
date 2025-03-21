@@ -74,6 +74,7 @@ export type Database = {
           tiktok_created_at: string | null
           transcript: string | null
           transcription_status: string
+          user_id: string | null
           video_id: string
           video_url: string | null
         }
@@ -96,6 +97,7 @@ export type Database = {
           tiktok_created_at?: string | null
           transcript?: string | null
           transcription_status?: string
+          user_id?: string | null
           video_id: string
           video_url?: string | null
         }
@@ -118,6 +120,7 @@ export type Database = {
           tiktok_created_at?: string | null
           transcript?: string | null
           transcription_status?: string
+          user_id?: string | null
           video_id?: string
           video_url?: string | null
         }

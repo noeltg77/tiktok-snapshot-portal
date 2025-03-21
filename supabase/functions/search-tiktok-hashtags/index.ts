@@ -15,9 +15,11 @@ Deno.serve(async (req) => {
   try {
     // Parse the request body
     let hashtag;
+    let userId;
     try {
       const body = await req.json();
       hashtag = body.hashtag;
+      userId = body.userId; // Get the userId from the request
       
       console.log('Received hashtag search request with body:', JSON.stringify(body));
     } catch (error) {
@@ -162,7 +164,9 @@ Deno.serve(async (req) => {
               hashtags: JSON.stringify(video.hashtags),
               author_name: video.authorName,
               author_avatar_url: video.authorAvatarUrl,
-              original_post_date: video.createTimeISO
+              original_post_date: video.createTimeISO,
+              user_id: userId, // Store the user ID with each search result
+              searched_at: new Date().toISOString()
             }, {
               onConflict: 'search_term,video_id'
             });

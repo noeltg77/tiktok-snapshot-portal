@@ -68,6 +68,7 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', formattedHashtag)
+        .eq('user_id', user.id) // Filter by current user
         .order('play_count', { ascending: false })
         .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1);
       
@@ -77,7 +78,8 @@ const HashtagsPage = () => {
         const { count, error: countError } = await supabase
           .from('searches')
           .select('*', { count: 'exact', head: true })
-          .eq('search_term', formattedHashtag);
+          .eq('search_term', formattedHashtag)
+          .eq('user_id', user.id); // Count only user's results
         
         if (!countError && count !== null) {
           setTotalPages(Math.ceil(count / postsPerPage));
@@ -125,7 +127,10 @@ const HashtagsPage = () => {
         console.log("Fetching fresh hashtag search data");
         
         const response = await supabase.functions.invoke('search-tiktok-hashtags', {
-          body: { hashtag: formattedHashtag }
+          body: { 
+            hashtag: formattedHashtag,
+            userId: user.id // Pass user ID to the edge function
+          }
         });
         
         if (response.error) {
@@ -184,6 +189,7 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', term)
+        .eq('user_id', user.id) // Filter by current user
         .order('play_count', { ascending: false })
         .range(0, postsPerPage - 1);
       
@@ -194,7 +200,8 @@ const HashtagsPage = () => {
       const { count, error: countError } = await supabase
         .from('searches')
         .select('*', { count: 'exact', head: true })
-        .eq('search_term', term);
+        .eq('search_term', term)
+        .eq('user_id', user.id); // Count only user's results
       
       if (!countError && count !== null) {
         setTotalPages(Math.ceil(count / postsPerPage));
