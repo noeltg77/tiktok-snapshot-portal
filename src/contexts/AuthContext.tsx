@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -14,6 +13,10 @@ type Profile = {
   fans: number | null;
   heart: number | null;
   video: number | null;
+  topics_and_themes: string | null;
+  tone_and_language: string | null;
+  content_structure: string | null;
+  audience_connection: string | null;
 }
 
 type AuthContextType = {
@@ -35,11 +38,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a key in localStorage to track the last fetch time
 const LAST_FETCH_KEY = 'tiktok_last_fetch_time';
-// 5 minutes in milliseconds
 const COOLDOWN_PERIOD = 5 * 60 * 1000;
-// Key for data fetching preference
 const DATA_FETCHING_ENABLED_KEY = 'tiktok_data_fetching_enabled';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -50,30 +50,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [profileLoading, setProfileLoading] = useState(true);
   const [initialDataFetchDone, setInitialDataFetchDone] = useState(false);
   const [isDataFetchingEnabled, setIsDataFetchingEnabled] = useState(() => {
-    // Initialize from localStorage, default to true
     const savedPreference = localStorage.getItem(DATA_FETCHING_ENABLED_KEY);
     return savedPreference === null ? true : savedPreference === 'true';
   });
   const navigate = useNavigate();
   
-  // Save data fetching preference to localStorage
   const setDataFetchingEnabled = (enabled: boolean) => {
     setIsDataFetchingEnabled(enabled);
     localStorage.setItem(DATA_FETCHING_ENABLED_KEY, enabled.toString());
   };
   
-  // Get last fetch time from localStorage instead of state to persist across refreshes
   const getLastFetchTime = (): number | null => {
     const stored = localStorage.getItem(LAST_FETCH_KEY);
     return stored ? parseInt(stored, 10) : null;
   };
   
-  // Store last fetch time in localStorage
   const setLastFetchTime = (time: number) => {
     localStorage.setItem(LAST_FETCH_KEY, time.toString());
   };
 
-  // Add function to get the next refresh time
   const getNextRefreshTime = (): Date | null => {
     const lastFetchTime = getLastFetchTime();
     if (!lastFetchTime) return null;
@@ -81,7 +76,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return new Date(lastFetchTime + COOLDOWN_PERIOD);
   };
   
-  // Add function to get remaining cooldown in milliseconds
   const getCooldownRemaining = (): number | null => {
     const lastFetchTime = getLastFetchTime();
     if (!lastFetchTime) return null;
@@ -94,7 +88,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const fetchTikTokData = async (username: string) => {
-    // If data fetching is disabled, skip API call
     if (!isDataFetchingEnabled) {
       console.log('Data fetching is disabled, skipping API call');
       return null;
@@ -104,7 +97,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const now = Date.now();
       const lastFetchTime = getLastFetchTime();
       
-      // Check if we're in the cooldown period (5 minutes = 300000 ms)
       if (lastFetchTime && now - lastFetchTime < COOLDOWN_PERIOD) {
         console.log('Skipping API call - cooldown period active');
         console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
@@ -118,7 +110,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         body: { tiktokUsername: username }
       });
       
-      // Set the last fetch time in localStorage
       setLastFetchTime(now);
       
       if (response.error) {
@@ -128,7 +119,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log('TikTok data fetched successfully:', response.data);
       
-      // Process and save videos to tiktok_posts table if they exist
       if (response.data && response.data.videos && response.data.videos.length > 0 && user) {
         await processTikTokVideos(response.data.videos, user.id);
       }
@@ -142,7 +132,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const processTikTokVideos = async (videos: any[], userId: string) => {
     try {
-      // Get existing post IDs to check for duplicates
       const { data: existingPosts } = await supabase
         .from('tiktok_posts')
         .select('id')
@@ -150,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       const existingIds = existingPosts ? existingPosts.map(post => post.id) : [];
       
-      // Filter out videos that are already in the database
       const newVideos = videos.filter(video => !existingIds.includes(video.id));
       
       if (newVideos.length === 0) {
@@ -160,9 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       console.log(`Found ${newVideos.length} new videos to insert`);
       
-      // Prepare video data for database insertion
       const postsToInsert = newVideos.map(video => {
-        // Ensure hashtags is properly serialized
         let hashtagsJson = '[]';
         if (Array.isArray(video.hashtags)) {
           try {
@@ -189,7 +175,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         };
       });
       
-      // Insert new videos into the database
       const { error } = await supabase
         .from('tiktok_posts')
         .insert(postsToInsert);
@@ -216,7 +201,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const now = Date.now();
       const lastFetchTime = getLastFetchTime();
       
-      // Check if we're in the cooldown period (5 minutes = 300000 ms)
       if (lastFetchTime && now - lastFetchTime < COOLDOWN_PERIOD) {
         console.log('Skipping refresh - cooldown period active');
         console.log(`Last fetch: ${new Date(lastFetchTime).toLocaleString()}`);
@@ -288,11 +272,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } else if (data) {
           setProfile(data);
           
-          // Only fetch TikTok data if we haven't already done the initial fetch
-          // and the user has a TikTok username
           if (data.tiktok_username && !initialDataFetchDone) {
             console.log('Initial profile load - checking if TikTok data refresh is needed');
-            await refreshTikTokData(); // This now respects the cooldown period
+            await refreshTikTokData();
             setInitialDataFetchDone(true);
           }
         } else {
@@ -332,7 +314,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(session?.user ?? null);
         setLoading(false);
         
-        // Reset initialDataFetchDone when auth state changes
         if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
           setInitialDataFetchDone(false);
         }
