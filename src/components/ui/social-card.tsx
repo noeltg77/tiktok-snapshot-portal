@@ -7,13 +7,20 @@ import {
   MessageCircle,
   Share,
   Bookmark,
-  MoreHorizontal,
   Link as LinkIcon,
   Eye,
   Hash,
+  Sparkles,
 } from "lucide-react";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "@/components/ui/hover-card";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogTrigger 
+} from "@/components/ui/dialog";
 
 interface SocialCardProps {
   author?: {
@@ -103,13 +110,28 @@ export function SocialCard({
                 </p>
               </div>
             </div>
-            <button
-              type="button"
-              onClick={onMore}
-              className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors"
-            >
-              <MoreHorizontal className="w-5 h-5 text-zinc-400" />
-            </button>
+            {/* Replace MoreHorizontal with Sparkles icon for AI and wrap in Dialog */}
+            <Dialog>
+              <DialogTrigger asChild>
+                <button
+                  type="button"
+                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-purple-500 hover:text-purple-600"
+                >
+                  <Sparkles className="w-5 h-5" />
+                </button>
+              </DialogTrigger>
+              <DialogContent className="max-w-md">
+                <DialogHeader>
+                  <DialogTitle>AI Content Repurposing</DialogTitle>
+                </DialogHeader>
+                <div className="py-4">
+                  <p className="text-sm text-gray-500">
+                    This feature will allow you to repurpose this TikTok content using AI.
+                    Coming soon!
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
           </div>
 
           {/* Engagement section - All stats now non-clickable except comments */}
