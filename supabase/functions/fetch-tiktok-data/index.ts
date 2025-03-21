@@ -40,10 +40,15 @@ Deno.serve(async (req) => {
 
     console.log(`Fetching TikTok data for username: ${tiktokUsername}`);
     
-    // Format username to ensure it has @ prefix
+    // Format username to ensure it has @ prefix and also prepare a version without @ for API call
     const formattedUsername = tiktokUsername.startsWith('@') 
       ? tiktokUsername 
       : `@${tiktokUsername}`;
+    
+    // Remove @ for the API call profiles array
+    const usernameWithoutAt = tiktokUsername.startsWith('@') 
+      ? tiktokUsername.substring(1) 
+      : tiktokUsername;
     
     // Create a more specific timestamp-based cache key
     // Format: tiktok-data-@username-YYYY-MM-DD-HH-MM
@@ -61,13 +66,17 @@ Deno.serve(async (req) => {
       },
       body: JSON.stringify({
         excludePinnedPosts: false,
-        profiles: [formattedUsername],
-        resultsPerPage: 20,
-        scrapeLastNDays: 365,
+        profiles: [usernameWithoutAt],
+        resultsPerPage: 21,
+        scrapeLastNDays: 356,
         shouldDownloadCovers: false,
         shouldDownloadSlideshowImages: false,
         shouldDownloadSubtitles: false,
-        shouldDownloadVideos: false, // Set to false to minimize API usage
+        shouldDownloadVideos: true,
+        profileScrapeSections: ["videos"],
+        profileSorting: "latest",
+        searchSection: "",
+        maxProfilesPerQuery: 10,
         cacheKey: cacheKey, // This is critical for preventing duplicate API calls to Apify
       }),
     });
