@@ -152,6 +152,8 @@ export type Database = {
           share_count: number | null
           text: string | null
           tiktok_created_at: string | null
+          transcript: string | null
+          transcription_status: string
           user_id: string
           video_url: string | null
         }
@@ -168,6 +170,8 @@ export type Database = {
           share_count?: number | null
           text?: string | null
           tiktok_created_at?: string | null
+          transcript?: string | null
+          transcription_status?: string
           user_id: string
           video_url?: string | null
         }
@@ -184,6 +188,8 @@ export type Database = {
           share_count?: number | null
           text?: string | null
           tiktok_created_at?: string | null
+          transcript?: string | null
+          transcription_status?: string
           user_id?: string
           video_url?: string | null
         }

@@ -1,15 +1,20 @@
 
 import React, { useState, useEffect } from "react";
 import { SocialCard } from "@/components/ui/social-card";
-import { Link as LinkIcon, CloudOff, CloudDownload, Hash } from "lucide-react";
+import { Link as LinkIcon, CloudOff, CloudDownload, Hash, FileText } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 const TikTokPosts = () => {
   const { profile, isDataFetchingEnabled } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingTranscript, setEditingTranscript] = useState(null);
+  const [transcriptText, setTranscriptText] = useState("");
+  const [savingTranscript, setSavingTranscript] = useState(false);
   
   // Fetch posts on component mount
   useEffect(() => {
@@ -142,6 +147,8 @@ const TikTokPosts = () => {
           cover_url: video.coverUrl,
           video_url: video.downloadLink,
           hashtags: hashtagsJson,
+          transcription_status: 'New',
+          transcript: null,
           tiktok_created_at: new Date(video.createTime * 1000).toISOString()
         };
       });
@@ -166,6 +173,54 @@ const TikTokPosts = () => {
       console.error('Error processing TikTok videos:', error);
       throw error;
     }
+  };
+  
+  const handleEditTranscript = (post) => {
+    setEditingTranscript(post.id);
+    setTranscriptText(post.transcript || '');
+  };
+  
+  const saveTranscript = async (postId) => {
+    if (!postId) return;
+    
+    setSavingTranscript(true);
+    try {
+      const { error } = await supabase
+        .from('tiktok_posts')
+        .update({
+          transcript: transcriptText,
+          transcription_status: transcriptText ? 'Completed' : 'New'
+        })
+        .eq('id', postId);
+      
+      if (error) throw error;
+      
+      // Update the posts state with the new transcript
+      setPosts(prevPosts => 
+        prevPosts.map(post => 
+          post.id === postId 
+            ? { 
+                ...post, 
+                transcript: transcriptText,
+                transcription_status: transcriptText ? 'Completed' : 'New'
+              } 
+            : post
+        )
+      );
+      
+      toast.success('Transcript saved successfully');
+      setEditingTranscript(null);
+    } catch (error) {
+      console.error('Error saving transcript:', error);
+      toast.error('Failed to save transcript');
+    } finally {
+      setSavingTranscript(false);
+    }
+  };
+  
+  const cancelEditTranscript = () => {
+    setEditingTranscript(null);
+    setTranscriptText('');
   };
   
   const handleAction = (id, action) => {
@@ -232,31 +287,97 @@ const TikTokPosts = () => {
             }
             
             return (
-              <SocialCard
-                key={post.id}
-                author={{
-                  name: profile?.tiktok_username || "User",
-                  username: profile?.tiktok_username?.replace('@', '') || "user",
-                  avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=600&crop=1",
-                  timeAgo: new Date(post.tiktok_created_at).toLocaleDateString(),
-                }}
-                content={{
-                  text: post.text,
-                  image: post.cover_url,
-                  hashtags: hashtagsArray,
-                  videoUrl: post.video_url, // Pass the video_url to the SocialCard
-                }}
-                engagement={{
-                  likes: post.digg_count,
-                  comments: post.comment_count,
-                  shares: post.share_count,
-                  views: post.play_count,
-                  bookmarks: post.collect_count,
-                  isLiked: false,
-                  isBookmarked: false,
-                }}
-                onComment={() => handleAction(post.id, 'commented')}
-              />
+              <div key={post.id} className="flex flex-col">
+                <SocialCard
+                  author={{
+                    name: profile?.tiktok_username || "User",
+                    username: profile?.tiktok_username?.replace('@', '') || "user",
+                    avatar: profile?.avatar_url || "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=600&h=600&crop=1",
+                    timeAgo: new Date(post.tiktok_created_at).toLocaleDateString(),
+                  }}
+                  content={{
+                    text: post.text,
+                    image: post.cover_url,
+                    hashtags: hashtagsArray,
+                    videoUrl: post.video_url,
+                  }}
+                  engagement={{
+                    likes: post.digg_count,
+                    comments: post.comment_count,
+                    shares: post.share_count,
+                    views: post.play_count,
+                    bookmarks: post.collect_count,
+                    isLiked: false,
+                    isBookmarked: false,
+                  }}
+                  onComment={() => handleAction(post.id, 'commented')}
+                />
+                
+                {/* Transcript section */}
+                <div className="mt-2 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1">
+                      <FileText size={16} className="text-gray-500" />
+                      <h3 className="text-sm font-medium">Transcript</h3>
+                    </div>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      post.transcription_status === 'Completed' ? 'bg-green-100 text-green-800' :
+                      post.transcription_status === 'In Progress' ? 'bg-blue-100 text-blue-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {post.transcription_status}
+                    </span>
+                  </div>
+                  
+                  {editingTranscript === post.id ? (
+                    <div className="space-y-2">
+                      <Textarea
+                        value={transcriptText}
+                        onChange={(e) => setTranscriptText(e.target.value)}
+                        placeholder="Enter transcript for this TikTok..."
+                        className="min-h-[100px] text-sm"
+                      />
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={cancelEditTranscript}
+                          disabled={savingTranscript}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          size="sm"
+                          onClick={() => saveTranscript(post.id)}
+                          disabled={savingTranscript}
+                        >
+                          {savingTranscript ? 'Saving...' : 'Save'}
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div>
+                      {post.transcript ? (
+                        <div className="text-sm text-gray-700 max-h-[100px] overflow-y-auto">
+                          {post.transcript}
+                        </div>
+                      ) : (
+                        <div className="text-sm text-gray-500 italic">
+                          No transcript available.
+                        </div>
+                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="mt-2"
+                        onClick={() => handleEditTranscript(post)}
+                      >
+                        {post.transcript ? 'Edit' : 'Add'} Transcript
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
