@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DashboardSocialCard } from "@/components/ui/dashboard-social-card";
 import { useAuth } from "@/contexts/AuthContext";
@@ -128,7 +129,8 @@ const TikTokPosts = () => {
           collect_count: video.collectCount || 0,
           comment_count: video.commentCount,
           cover_url: video.coverUrl,
-          video_url: video.downloadLink,
+          video_url: video.videoUrl || video.downloadLink,
+          download_url: video.downloadUrl, // Save the direct download URL
           hashtags: hashtagsJson,
           transcription_status: 'New',
           transcript: null,
@@ -229,7 +231,7 @@ const TikTokPosts = () => {
                     text: post.text,
                     image: post.cover_url,
                     hashtags: hashtagsArray,
-                    videoUrl: post.video_url,
+                    videoUrl: post.download_url || post.video_url, // Use download_url first if available
                   }}
                   engagement={{
                     likes: post.digg_count,
