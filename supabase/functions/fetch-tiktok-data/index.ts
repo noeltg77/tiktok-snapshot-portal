@@ -145,20 +145,12 @@ Deno.serve(async (req) => {
         };
       });
       
-      // Extract download URL for the user's profile (using first video's downloadUrl if available)
-      let profileDownloadUrl = null;
-      if (processedVideos.length > 0 && processedVideos[0].downloadUrl) {
-        profileDownloadUrl = processedVideos[0].downloadUrl;
-      }
-      
       const userData = {
         avatar: data[0].authorMeta.avatar,
         following: data[0].authorMeta.following,
         fans: data[0].authorMeta.fans,
         heart: data[0].authorMeta.heart,
         video: data[0].authorMeta.video,
-        // Include the download URL in the response
-        downloadUrl: profileDownloadUrl,
         // Include processed video data
         videos: processedVideos
       };
