@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -12,7 +11,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { HashtagSearchHistory } from "@/components/HashtagSearchHistory";
 
-// Define TikTok post type
 interface TikTokPost {
   id: string;
   cover_url?: string;
@@ -58,7 +56,6 @@ const HashtagsPage = () => {
     setIsSearching(true);
     
     try {
-      // First, try to get data from the searches table
       const formattedHashtag = searchQuery.startsWith('#') 
         ? searchQuery.substring(1) 
         : searchQuery;
@@ -67,14 +64,12 @@ const HashtagsPage = () => {
         .from('searches')
         .select('*')
         .eq('search_term', formattedHashtag)
-        .order('play_count', { ascending: false }) // Order by play_count in descending order
+        .order('play_count', { ascending: false })
         .range((currentPage - 1) * postsPerPage, currentPage * postsPerPage - 1);
       
-      // If we have cached data, use it
       if (!cachedError && cachedData && cachedData.length > 0) {
         console.log("Using cached hashtag search data");
         
-        // Count total results for pagination
         const { count, error: countError } = await supabase
           .from('searches')
           .select('*', { count: 'exact', head: true })
@@ -84,25 +79,20 @@ const HashtagsPage = () => {
           setTotalPages(Math.ceil(count / postsPerPage));
         }
         
-        // Transform the data to ensure hashtags is always a string array
         const transformedData = cachedData.map(post => {
           let hashtagsArray: string[] = [];
           
-          // Handle different possible formats of hashtags from the database
           if (post.hashtags) {
             if (Array.isArray(post.hashtags)) {
               hashtagsArray = post.hashtags as string[];
             } else if (typeof post.hashtags === 'string') {
-              // If it's a string, try to parse it as JSON
               try {
                 const parsed = JSON.parse(post.hashtags);
                 hashtagsArray = Array.isArray(parsed) ? parsed : [String(post.hashtags)];
               } catch {
-                // If parsing fails, treat it as a single hashtag
                 hashtagsArray = [String(post.hashtags)];
               }
             } else {
-              // For any other type, convert to string and use as a single hashtag
               hashtagsArray = [String(post.hashtags)];
             }
           }
@@ -125,7 +115,6 @@ const HashtagsPage = () => {
         
         setSearchResults(transformedData);
       } else {
-        // If no cached data, call the edge function to fetch new data
         console.log("Fetching fresh hashtag search data");
         
         const response = await supabase.functions.invoke('search-tiktok-hashtags', {
@@ -140,7 +129,6 @@ const HashtagsPage = () => {
         console.log("Received API response:", data);
         
         if (data.videos && data.videos.length > 0) {
-          // The videos are already sorted by play_count in the edge function
           const videos = data.videos.map((video: any) => ({
             id: video.id,
             cover_url: video.coverUrl,
@@ -178,12 +166,10 @@ const HashtagsPage = () => {
   const handleSearchHistorySelect = async (term: string) => {
     setSearchQuery(term);
     
-    // Immediately trigger a search with the selected term
     setIsSearching(true);
-    setCurrentPage(1); // Reset to first page
+    setCurrentPage(1);
     
     try {
-      // Get data directly from the searches table for the selected term
       const { data: cachedData, error: cachedError } = await supabase
         .from('searches')
         .select('*')
@@ -195,7 +181,6 @@ const HashtagsPage = () => {
         throw cachedError;
       }
       
-      // Count total results for pagination
       const { count, error: countError } = await supabase
         .from('searches')
         .select('*', { count: 'exact', head: true })
@@ -205,11 +190,9 @@ const HashtagsPage = () => {
         setTotalPages(Math.ceil(count / postsPerPage));
       }
       
-      // Transform the data to ensure hashtags is always a string array
       const transformedData = cachedData.map(post => {
         let hashtagsArray: string[] = [];
         
-        // Handle different possible formats of hashtags from the database
         if (post.hashtags) {
           if (Array.isArray(post.hashtags)) {
             hashtagsArray = post.hashtags as string[];
@@ -255,18 +238,16 @@ const HashtagsPage = () => {
     }
   };
 
-  // Extract hashtags from post text or use the stored hashtags array
   const extractHashtags = (post: TikTokPost) => {
     if (Array.isArray(post.hashtags) && post.hashtags.length > 0) {
       return post.hashtags;
     }
     
-    // Fallback: extract hashtags from text
     if (post.text) {
       const regex = /#(\w+)/g;
       const matches = post.text.match(regex);
       if (matches) {
-        return matches.map(tag => tag.substring(1)); // Remove the # symbol
+        return matches.map(tag => tag.substring(1));
       }
     }
     
@@ -306,6 +287,9 @@ const HashtagsPage = () => {
                 <Search className="ml-2 h-4 w-4" />
               </Button>
               <HashtagSearchHistory onSelectSearchTerm={handleSearchHistorySelect} />
+              <div className="ml-2 text-xs text-gray-500 hidden sm:flex items-center">
+                <span className="hidden sm:inline">← Search History</span>
+              </div>
             </form>
           </div>
 

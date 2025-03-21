@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { History, Loader2 } from "lucide-react";
+import { Clock, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface HashtagSearchHistoryProps {
@@ -55,10 +55,10 @@ export const HashtagSearchHistory = ({ onSelectSearchTerm }: HashtagSearchHistor
         <Button 
           variant="outline" 
           size="icon"
-          className="ml-2"
+          className="ml-2 relative"
           title="Search History"
         >
-          <History className="h-4 w-4" />
+          <Clock className="h-5 w-5 text-primary" />
         </Button>
       </SheetTrigger>
       <SheetContent className="w-[300px] sm:w-[400px]">
