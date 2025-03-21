@@ -145,24 +145,35 @@ const BrandVoicePage = () => {
     
     setSaving(true);
     try {
+      // First update our local state immediately to ensure UI consistency
+      const updatedContent = editedContent[section as keyof typeof editedContent];
+      
+      setDisplayContent(prev => ({
+        ...prev,
+        [section]: updatedContent
+      }));
+      
+      // Then update the database
       const { error } = await supabase
         .from('profiles')
-        .update({ [section]: editedContent[section as keyof typeof editedContent] })
+        .update({ [section]: updatedContent })
         .eq('id', user.id);
         
       if (error) throw error;
-      
-      // Update the display content to show the edited changes
-      setDisplayContent(prev => ({
-        ...prev,
-        [section]: editedContent[section as keyof typeof editedContent]
-      }));
       
       setEditingSection(null);
       toast.success("Brand voice section updated successfully");
     } catch (error) {
       console.error('Error updating profile:', error);
       toast.error("Failed to update brand voice section");
+      
+      // Revert the UI change if the database update failed
+      if (profile) {
+        setDisplayContent(prev => ({
+          ...prev,
+          [section]: profile[section as keyof typeof profile] || "Not Generated"
+        }));
+      }
     } finally {
       setSaving(false);
     }
