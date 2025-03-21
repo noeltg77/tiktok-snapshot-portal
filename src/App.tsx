@@ -12,6 +12,7 @@ import HashtagsPage from "./pages/HashtagsPage";
 import SettingsPage from "./pages/SettingsPage";
 import TikTokUsernameForm from "./pages/TikTokUsernameForm";
 import BrandVoicePage from "./pages/BrandVoicePage";
+import RepurposeDashboardPage from "./pages/RepurposeDashboardPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/brand-voice" element={<BrandVoicePage />} />
             <Route path="/settings" element={<SettingsPage />} />
             <Route path="/tiktok-username" element={<TikTokUsernameForm />} />
+            <Route path="/repurpose-dashboard" element={<RepurposeDashboardPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

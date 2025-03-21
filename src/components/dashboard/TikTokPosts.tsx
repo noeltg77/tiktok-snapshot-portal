@@ -259,6 +259,7 @@ const TikTokPosts = () => {
                     isBookmarked: false,
                   }}
                   onComment={() => handleAction(post.id, 'commented')}
+                  context="dashboard" // Explicitly set the context to dashboard
                 />
               </div>
             );

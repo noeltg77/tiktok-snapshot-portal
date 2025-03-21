@@ -21,6 +21,7 @@ import {
   DialogTitle, 
   DialogTrigger 
 } from "@/components/ui/dialog";
+import { useNavigate } from "react-router-dom";
 
 interface SocialCardProps {
   author?: {
@@ -55,6 +56,7 @@ interface SocialCardProps {
   onBookmark?: () => void;
   onMore?: () => void;
   className?: string;
+  context?: 'dashboard' | 'hashtag'; // New prop to differentiate between contexts
 }
 
 export function SocialCard({
@@ -66,8 +68,10 @@ export function SocialCard({
   onShare,
   onBookmark,
   onMore,
-  className
+  className,
+  context = 'dashboard' // Default to dashboard context
 }: SocialCardProps) {
+  const navigate = useNavigate();
   // Ensure hashtags is always an array
   const hashtags = Array.isArray(content?.hashtags) ? content.hashtags : [];
 
@@ -76,6 +80,16 @@ export function SocialCard({
     if (content?.videoUrl) {
       window.open(content.videoUrl, '_blank');
     }
+  };
+  
+  // Function to handle the sparkle button click in dashboard context
+  const handleDashboardSparkleClick = () => {
+    // Navigate to the repurpose page for dashboard posts
+    navigate('/repurpose-dashboard', { 
+      state: { 
+        postData: { author, content, engagement } 
+      } 
+    });
   };
 
   return (
@@ -110,28 +124,41 @@ export function SocialCard({
                 </p>
               </div>
             </div>
-            {/* Replace MoreHorizontal with Sparkles icon for AI and wrap in Dialog */}
-            <Dialog>
-              <DialogTrigger asChild>
-                <button
-                  type="button"
-                  className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-purple-500 hover:text-purple-600"
-                >
-                  <Sparkles className="w-5 h-5" />
-                </button>
-              </DialogTrigger>
-              <DialogContent className="max-w-md">
-                <DialogHeader>
-                  <DialogTitle>AI Content Repurposing</DialogTitle>
-                </DialogHeader>
-                <div className="py-4">
-                  <p className="text-sm text-gray-500">
-                    This feature will allow you to repurpose this TikTok content using AI.
-                    Coming soon!
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+            
+            {/* Check context and render appropriate sparkle button */}
+            {context === 'dashboard' ? (
+              // Dashboard sparkle button - Direct navigation
+              <button
+                type="button"
+                onClick={handleDashboardSparkleClick}
+                className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-purple-500 hover:text-purple-600"
+              >
+                <Sparkles className="w-5 h-5" />
+              </button>
+            ) : (
+              // Hashtag search sparkle button - Dialog
+              <Dialog>
+                <DialogTrigger asChild>
+                  <button
+                    type="button"
+                    className="p-2 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-full transition-colors text-purple-500 hover:text-purple-600"
+                  >
+                    <Sparkles className="w-5 h-5" />
+                  </button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>AI Content Repurposing</DialogTitle>
+                  </DialogHeader>
+                  <div className="py-4">
+                    <p className="text-sm text-gray-500">
+                      This feature will allow you to repurpose this TikTok content using AI.
+                      Coming soon!
+                    </p>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
 
           {/* Engagement section - All stats now non-clickable except comments */}
