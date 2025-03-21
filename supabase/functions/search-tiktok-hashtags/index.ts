@@ -107,6 +107,14 @@ Deno.serve(async (req) => {
       if (!videoUrl && item.videoUrl) {
         videoUrl = item.videoUrl;
       }
+      
+      // Get the direct download URL from videoMeta.downloadAddr
+      let downloadUrl = null;
+      if (item.videoMeta && item.videoMeta.downloadAddr) {
+        downloadUrl = item.videoMeta.downloadAddr;
+      } else if (item.mediaUrls && item.mediaUrls.length > 0) {
+        downloadUrl = item.mediaUrls[0];
+      }
 
       // Extract author information
       const authorName = item.authorMeta?.name || '';
@@ -125,6 +133,7 @@ Deno.serve(async (req) => {
         collectCount: item.collectCount || 0,
         coverUrl: coverUrl,
         downloadLink: videoUrl,
+        downloadUrl: downloadUrl,
         hashtags: hashtags,
         authorName: authorName,
         authorAvatarUrl: authorAvatarUrl
@@ -156,6 +165,7 @@ Deno.serve(async (req) => {
               text: video.text,
               tiktok_created_at: new Date(video.createTime * 1000).toISOString(),
               video_url: video.downloadLink,
+              download_url: video.downloadUrl, // Store the download URL
               share_count: video.shareCount,
               play_count: video.playCount,
               collect_count: video.collectCount,

@@ -75,6 +75,7 @@ export type Database = {
           cover_url: string | null
           created_at: string | null
           digg_count: number | null
+          download_url: string | null
           hashtags: Json | null
           id: string
           original_post_date: string | null
@@ -98,6 +99,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string | null
           digg_count?: number | null
+          download_url?: string | null
           hashtags?: Json | null
           id?: string
           original_post_date?: string | null
@@ -121,6 +123,7 @@ export type Database = {
           cover_url?: string | null
           created_at?: string | null
           digg_count?: number | null
+          download_url?: string | null
           hashtags?: Json | null
           id?: string
           original_post_date?: string | null

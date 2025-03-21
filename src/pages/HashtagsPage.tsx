@@ -6,7 +6,7 @@ import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SocialCard } from "@/components/ui/social-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, CloudOff } from "lucide-react";
+import { Search, CloudOff, Download } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
@@ -18,6 +18,7 @@ interface TikTokPost {
   text?: string;
   tiktok_created_at?: string;
   video_url?: string;
+  download_url?: string;
   share_count?: number;
   play_count?: number;
   collect_count?: number;
@@ -109,6 +110,7 @@ const HashtagsPage = () => {
             text: post.text,
             tiktok_created_at: post.tiktok_created_at,
             video_url: post.video_url,
+            download_url: post.download_url,
             share_count: post.share_count,
             play_count: post.play_count,
             collect_count: post.collect_count,
@@ -147,6 +149,7 @@ const HashtagsPage = () => {
             text: video.text,
             tiktok_created_at: video.createTime ? new Date(video.createTime * 1000).toISOString() : null,
             video_url: video.downloadLink,
+            download_url: video.downloadUrl,
             share_count: video.shareCount,
             play_count: video.playCount,
             collect_count: video.collectCount,
@@ -231,6 +234,7 @@ const HashtagsPage = () => {
           text: post.text,
           tiktok_created_at: post.tiktok_created_at,
           video_url: post.video_url,
+          download_url: post.download_url,
           share_count: post.share_count,
           play_count: post.play_count,
           collect_count: post.collect_count,
@@ -256,6 +260,30 @@ const HashtagsPage = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  const handleDownloadVideo = (downloadUrl: string | undefined, videoId: string) => {
+    if (!downloadUrl) {
+      toast({
+        title: "Download Error",
+        description: "No download URL available for this video",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Create a download link
+    const a = document.createElement('a');
+    a.href = downloadUrl;
+    a.download = `tiktok-${videoId}.mp4`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    
+    toast({
+      title: "Download Started",
+      description: "Your video download has started",
+    });
   };
 
   const extractHashtags = (post: TikTokPost) => {
@@ -317,28 +345,41 @@ const HashtagsPage = () => {
             <>
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {searchResults.map((post) => (
-                  <SocialCard
-                    key={post.id}
-                    author={{
-                      name: post.author_name || "TikTok Creator",
-                      username: post.author_name?.toLowerCase().replace(/\s+/g, '.') || "tiktok_creator",
-                      avatar: post.author_avatar_url,
-                      timeAgo: formatTimestamp(post.original_post_date || post.tiktok_created_at),
-                    }}
-                    content={{
-                      text: post.text,
-                      image: post.cover_url,
-                      hashtags: extractHashtags(post),
-                      videoUrl: post.video_url,
-                    }}
-                    engagement={{
-                      likes: post.digg_count,
-                      comments: post.comment_count,
-                      shares: post.share_count,
-                      views: post.play_count,
-                      bookmarks: post.collect_count,
-                    }}
-                  />
+                  <div key={post.id} className="relative">
+                    <SocialCard
+                      key={post.id}
+                      author={{
+                        name: post.author_name || "TikTok Creator",
+                        username: post.author_name?.toLowerCase().replace(/\s+/g, '.') || "tiktok_creator",
+                        avatar: post.author_avatar_url,
+                        timeAgo: formatTimestamp(post.original_post_date || post.tiktok_created_at),
+                      }}
+                      content={{
+                        text: post.text,
+                        image: post.cover_url,
+                        hashtags: extractHashtags(post),
+                        videoUrl: post.video_url,
+                      }}
+                      engagement={{
+                        likes: post.digg_count,
+                        comments: post.comment_count,
+                        shares: post.share_count,
+                        views: post.play_count,
+                        bookmarks: post.collect_count,
+                      }}
+                    />
+                    {post.download_url && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="absolute bottom-4 right-4 bg-white/80 dark:bg-black/80 hover:bg-white dark:hover:bg-black"
+                        onClick={() => handleDownloadVideo(post.download_url, post.id)}
+                      >
+                        <Download className="h-4 w-4 mr-1" />
+                        Download
+                      </Button>
+                    )}
+                  </div>
                 ))}
               </div>
               
