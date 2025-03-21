@@ -18,6 +18,8 @@ export type Database = {
           heart: number | null
           id: string
           tiktok_username: string | null
+          transcript: string | null
+          transcription_status: string | null
           updated_at: string
           username: string | null
           video: number | null
@@ -30,6 +32,8 @@ export type Database = {
           heart?: number | null
           id: string
           tiktok_username?: string | null
+          transcript?: string | null
+          transcription_status?: string | null
           updated_at?: string
           username?: string | null
           video?: number | null
@@ -42,6 +46,8 @@ export type Database = {
           heart?: number | null
           id?: string
           tiktok_username?: string | null
+          transcript?: string | null
+          transcription_status?: string | null
           updated_at?: string
           username?: string | null
           video?: number | null
@@ -63,6 +69,8 @@ export type Database = {
           share_count: number | null
           text: string | null
           tiktok_created_at: string | null
+          transcript: string | null
+          transcription_status: string
           video_id: string
           video_url: string | null
         }
@@ -80,6 +88,8 @@ export type Database = {
           share_count?: number | null
           text?: string | null
           tiktok_created_at?: string | null
+          transcript?: string | null
+          transcription_status?: string
           video_id: string
           video_url?: string | null
         }
@@ -97,6 +107,8 @@ export type Database = {
           share_count?: number | null
           text?: string | null
           tiktok_created_at?: string | null
+          transcript?: string | null
+          transcription_status?: string
           video_id?: string
           video_url?: string | null
         }

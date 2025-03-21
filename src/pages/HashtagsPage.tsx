@@ -10,6 +10,7 @@ import { Search, CloudOff } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink } from "@/components/ui/pagination";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
+import { HashtagSearchHistory } from "@/components/HashtagSearchHistory";
 
 // Define TikTok post type
 interface TikTokPost {
@@ -24,6 +25,7 @@ interface TikTokPost {
   comment_count?: number;
   digg_count?: number;
   hashtags?: string[];
+  transcript?: string;
 }
 
 const HashtagsPage = () => {
@@ -116,7 +118,8 @@ const HashtagsPage = () => {
             collect_count: post.collect_count,
             comment_count: post.comment_count,
             digg_count: post.digg_count,
-            hashtags: hashtagsArray
+            hashtags: hashtagsArray,
+            transcript: post.transcript
           } as TikTokPost;
         });
         
@@ -164,6 +167,86 @@ const HashtagsPage = () => {
       toast({
         title: "Search Error",
         description: error instanceof Error ? error.message : "Failed to search for hashtag",
+        variant: "destructive"
+      });
+      setSearchResults([]);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const handleSearchHistorySelect = async (term: string) => {
+    setSearchQuery(term);
+    
+    // Immediately trigger a search with the selected term
+    setIsSearching(true);
+    setCurrentPage(1); // Reset to first page
+    
+    try {
+      // Get data directly from the searches table for the selected term
+      const { data: cachedData, error: cachedError } = await supabase
+        .from('searches')
+        .select('*')
+        .eq('search_term', term)
+        .order('play_count', { ascending: false })
+        .range(0, postsPerPage - 1);
+      
+      if (cachedError) {
+        throw cachedError;
+      }
+      
+      // Count total results for pagination
+      const { count, error: countError } = await supabase
+        .from('searches')
+        .select('*', { count: 'exact', head: true })
+        .eq('search_term', term);
+      
+      if (!countError && count !== null) {
+        setTotalPages(Math.ceil(count / postsPerPage));
+      }
+      
+      // Transform the data to ensure hashtags is always a string array
+      const transformedData = cachedData.map(post => {
+        let hashtagsArray: string[] = [];
+        
+        // Handle different possible formats of hashtags from the database
+        if (post.hashtags) {
+          if (Array.isArray(post.hashtags)) {
+            hashtagsArray = post.hashtags as string[];
+          } else if (typeof post.hashtags === 'string') {
+            try {
+              const parsed = JSON.parse(post.hashtags);
+              hashtagsArray = Array.isArray(parsed) ? parsed : [String(post.hashtags)];
+            } catch {
+              hashtagsArray = [String(post.hashtags)];
+            }
+          } else {
+            hashtagsArray = [String(post.hashtags)];
+          }
+        }
+        
+        return {
+          id: post.video_id,
+          cover_url: post.cover_url,
+          text: post.text,
+          tiktok_created_at: post.tiktok_created_at,
+          video_url: post.video_url,
+          share_count: post.share_count,
+          play_count: post.play_count,
+          collect_count: post.collect_count,
+          comment_count: post.comment_count,
+          digg_count: post.digg_count,
+          hashtags: hashtagsArray,
+          transcript: post.transcript
+        } as TikTokPost;
+      });
+      
+      setSearchResults(transformedData);
+    } catch (error) {
+      console.error("Error loading search history results:", error);
+      toast({
+        title: "Search Error",
+        description: "Failed to load results from search history",
         variant: "destructive"
       });
       setSearchResults([]);
@@ -222,6 +305,7 @@ const HashtagsPage = () => {
                 {isSearching ? "Searching..." : "Search"}
                 <Search className="ml-2 h-4 w-4" />
               </Button>
+              <HashtagSearchHistory onSelectSearchTerm={handleSearchHistorySelect} />
             </form>
           </div>
 
