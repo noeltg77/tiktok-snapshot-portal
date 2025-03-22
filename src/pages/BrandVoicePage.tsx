@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -177,15 +178,20 @@ const BrandVoicePage = () => {
     setGenerating(true);
     setProgress(0);
     
-    // Start progress animation
+    // Start progress animation - adjusted for 30 seconds
+    // We'll update it more frequently and with smaller increments to make it last ~30 seconds
+    // For ~30 seconds we'll do updates every 300ms and increase by ~1% each time
     const interval = setInterval(() => {
       setProgress(prev => {
+        // Stop at 95% and wait for actual completion
         if (prev >= 95) {
           return 95;
         }
-        return prev + 5;
+        // Each step is roughly 1%, which gives us ~95 steps
+        // At 300ms per step, that's ~28.5 seconds to reach 95%
+        return prev + 1;
       });
-    }, 500);
+    }, 300);
     
     setProgressInterval(interval);
     
