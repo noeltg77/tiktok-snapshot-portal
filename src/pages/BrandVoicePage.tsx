@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -31,7 +30,7 @@ const BrandVoiceCard = ({
   onSave,
   onContentChange
 }: BrandVoiceCardProps) => {
-  return <Card className="h-full">
+  return <Card className="h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
         {isEditing ? <Button variant="ghost" size="sm" onClick={onSave} className="h-8 w-8 p-0">
@@ -40,10 +39,18 @@ const BrandVoiceCard = ({
             <Pencil className="h-4 w-4" />
           </Button>}
       </CardHeader>
-      <CardContent>
-        {isEditing ? <textarea className="w-full h-[150px] p-2 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-700" value={editedContent} onChange={e => onContentChange(e.target.value)} /> : <div className="text-sm whitespace-pre-wrap h-[150px] overflow-y-auto">
+      <CardContent className="flex-grow pb-6">
+        {isEditing ? 
+          <textarea 
+            className="w-full h-full min-h-[250px] p-2 text-sm border rounded-md dark:bg-gray-800 dark:border-gray-700" 
+            value={editedContent} 
+            onChange={e => onContentChange(e.target.value)} 
+          /> 
+          : 
+          <div className="text-sm whitespace-pre-wrap h-full min-h-[250px] overflow-y-auto">
             {content}
-          </div>}
+          </div>
+        }
       </CardContent>
     </Card>;
 };
@@ -240,10 +247,10 @@ const BrandVoicePage = () => {
     }
   };
 
-  return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-      <div className="flex h-screen">
+  return <div className="min-h-screen h-screen flex bg-gray-50 dark:bg-gray-900">
+      <div className="flex h-full w-full">
         <DashboardSidebar />
-        <div className="flex-1 p-8 overflow-y-auto">
+        <div className="flex-1 p-8 overflow-y-auto flex flex-col">
           <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold">Brand Voice</h1>
             <Button onClick={handleGenerateBrandVoice} disabled={generating} className="bg-slate-950 hover:bg-slate-800">
@@ -264,7 +271,7 @@ const BrandVoicePage = () => {
             </div>
           )}
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
             {/* Topics and Themes Card */}
             <BrandVoiceCard title="Topics and Themes" content={displayContent.topics_and_themes} isEditing={editingSection === "topics_and_themes"} editedContent={editedContent.topics_and_themes} fieldName="topics_and_themes" onEdit={() => handleEdit("topics_and_themes")} onSave={() => handleSave("topics_and_themes")} onContentChange={content => handleContentChange("topics_and_themes", content)} />
             
