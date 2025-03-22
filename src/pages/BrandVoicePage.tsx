@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
@@ -7,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Pencil, Save } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Progress } from "@/components/ui/progress";
 
 // BrandVoiceCard component for each section
 interface BrandVoiceCardProps {
@@ -56,6 +58,8 @@ const BrandVoicePage = () => {
   } = useAuth();
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [progressInterval, setProgressInterval] = useState<NodeJS.Timeout | null>(null);
 
   // Editing states for each section
   const [editingSection, setEditingSection] = useState<string | null>(null);
@@ -89,6 +93,16 @@ const BrandVoicePage = () => {
       setEditedContent(content);
     }
   }, [profile]);
+
+  // Clear progress interval when component unmounts
+  useEffect(() => {
+    return () => {
+      if (progressInterval) {
+        clearInterval(progressInterval);
+      }
+    };
+  }, [progressInterval]);
+
   if (loading || profileLoading) {
     return <div className="min-h-screen flex items-center justify-center">
         <p className="text-lg">Loading...</p>
@@ -97,6 +111,7 @@ const BrandVoicePage = () => {
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
+
   const handleEdit = (section: string) => {
     setEditingSection(section);
     // Initialize edited content with current display content
@@ -105,12 +120,14 @@ const BrandVoicePage = () => {
       [section]: displayContent[section as keyof typeof displayContent]
     }));
   };
+
   const handleContentChange = (section: string, content: string) => {
     setEditedContent(prev => ({
       ...prev,
       [section]: content
     }));
   };
+
   const handleSave = async (section: string) => {
     if (!user) return;
     setSaving(true);
@@ -128,6 +145,7 @@ const BrandVoicePage = () => {
       } = await supabase.from('profiles').update({
         [section]: updatedContent
       }).eq('id', user.id);
+      
       if (error) throw error;
       setEditingSection(null);
       toast.success("Brand voice section updated successfully");
@@ -146,14 +164,82 @@ const BrandVoicePage = () => {
       setSaving(false);
     }
   };
+
   const handleGenerateBrandVoice = async () => {
+    if (!user) return;
     setGenerating(true);
-    // This is a placeholder for future implementation
-    toast.info("Brand voice generation will be implemented later");
-    setTimeout(() => {
+    setProgress(0);
+    
+    // Start progress animation
+    const interval = setInterval(() => {
+      setProgress(prev => {
+        if (prev >= 95) {
+          return 95;
+        }
+        return prev + 5;
+      });
+    }, 500);
+    
+    setProgressInterval(interval);
+    
+    try {
+      // Call the webhook with the user ID
+      const response = await fetch('https://hook.eu2.make.com/owm2f5i4r21aovc7pfh2kg34481svmrr', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          user_id: user.id
+        }),
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Error: ${response.status}`);
+      }
+      
+      // Update progress to 100% when complete
+      setProgress(100);
+      
+      // Small delay to show 100% progress before fetching updated data
+      setTimeout(async () => {
+        // Fetch the updated profile data to get the new brand voice content
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) throw error;
+        
+        if (data) {
+          // Update the UI with the new content
+          const updatedContent = {
+            topics_and_themes: data.topics_and_themes || "Not Generated",
+            tone_and_language: data.tone_and_language || "Not Generated",
+            content_structure: data.content_structure || "Not Generated",
+            audience_connection: data.audience_connection || "Not Generated"
+          };
+          
+          setDisplayContent(updatedContent);
+          setEditedContent(updatedContent);
+          toast.success("Brand voice generated successfully!");
+        }
+        
+        setGenerating(false);
+        clearInterval(interval);
+        setProgressInterval(null);
+      }, 500);
+      
+    } catch (error) {
+      console.error('Error generating brand voice:', error);
+      toast.error("Failed to generate brand voice");
       setGenerating(false);
-    }, 1500);
+      clearInterval(interval);
+      setProgressInterval(null);
+    }
   };
+
   return <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <div className="flex h-screen">
         <DashboardSidebar />
@@ -167,6 +253,16 @@ const BrandVoicePage = () => {
                 </> : "Generate Brand Voice"}
             </Button>
           </div>
+          
+          {generating && (
+            <div className="mb-6">
+              <div className="flex justify-between mb-1 text-sm">
+                <span>Generating your brand voice...</span>
+                <span>{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+          )}
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Topics and Themes Card */}
